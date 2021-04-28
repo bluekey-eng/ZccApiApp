@@ -1,0 +1,22 @@
+{
+  "name": "ZccApiApp",
+  "version": "0.1.0",
+  "description": "",
+  "main": "lindex.ts",
+  "scripts": {
+    "test": "test",
+    "start": "node lib/index",
+    "install": "tsc --project tsconfig.json"
+  },
+  "author": "Nilushan Silva",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^13.9.3"
+  },
+  "files": [
+    "lib/**/*"
+  ],
+  "dependencies": {
+    "typescript": "^4.2.4"
+  }
+}
