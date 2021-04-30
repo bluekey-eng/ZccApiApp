@@ -25,7 +25,22 @@ export class DeviceList {
 
         const actionsMessages: any[] = [];
         this.deviceMap.forEach(dev => {
-            const isOn = dev.get()?.states?.controlState?.state?.isOn;
+
+            let isOn: boolean | undefined = undefined
+            switch (dev.get().properties.controlPointType) {
+                case 'dimmer':
+                    isOn = dev.get()?.states?.controlState?.dimmer?.isOn;
+                    break;
+                case 'outlet':
+                    isOn = dev.get()?.states?.controlState?.outlet?.isOn;
+                    break;
+                case 'fan':
+                    isOn = dev.get()?.states?.controlState?.fan?.isOn;
+                    break;
+                case 'switch':
+                    isOn = dev.get()?.states?.controlState?.switch?.isOn;
+                    break;
+            }
 
             if (isOn != undefined) {
 

@@ -3,16 +3,25 @@ export interface IDevice{
     id: string;
     properties?: {
         name: string,
-        controlPointType: string, 
+        controlPointType: 'switch' | 'outlet'|'dimmer'|'fan'|'garagedoor', 
         roomName: string,
         roomId: number,
 
     },
     states?: {
         controlState?:{
-            state?: {
+            switch?: {
+                isOn: boolean,
+            },
+            dimmer?: {
                 isOn: boolean,
                 brightness: number;
+            },
+            outlet?: {
+                isOn: boolean,
+            },
+            fan?: {
+                isOn: boolean,
             },
             isConnected: boolean;
         }
