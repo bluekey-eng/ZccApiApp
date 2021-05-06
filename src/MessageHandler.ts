@@ -1,7 +1,7 @@
 import { DeviceList } from './Devices/DeviceList';
 import { Messages } from './messages';
 import { SocketClient } from './Socket/client'
-const zccIp = '10.0.0.59';
+const zccIp = '192.168.0.95';
 const zccPort = 5003;
 
 enum States {
@@ -71,14 +71,18 @@ export class MessageHandler {
                 this.state = States.REQUEST_STATE_EVENTS;
                 break;
             case States.RECEIVE_STATE_EVENTS:
-                this.setTimeout(10000).then(() => {
+                this.state = States.SENT_TOGGLE_ACTION;
+                // this.setTimeout(10000).then(() => {
                     setInterval(() => {
 
-                        const actions = this.deviceList.toggleOnOffMessages()
+                        const actions = this.deviceList.toggleOnOffMessages();
+                        // actions.forEach(action =>{
+                        //     this.clientSocket.sendData(Messages.getCPSetActions([action]));
+                        // })
                         this.clientSocket.sendData(Messages.getCPSetActions(actions));
+
                     }, 10000)
-                })
-                this.state = States.SENT_TOGGLE_ACTION;
+                // })
                 break;
             case States.SENT_TOGGLE_ACTION:
 
