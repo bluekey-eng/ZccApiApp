@@ -17,6 +17,7 @@
     "lib/**/*"
   ],
   "dependencies": {
+    "chalk": "^4.1.1",
     "typescript": "^4.2.4"
   }
 }

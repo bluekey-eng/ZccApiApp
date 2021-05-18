@@ -1,4 +1,5 @@
 import * as net from 'net';
+import { offLog, sendLog } from '../log';
 
 export class SocketClient {
 
@@ -46,15 +47,24 @@ export class SocketClient {
 	}
 
 	public sendData(message: string) {
-		console.log('sending - ' + message)
-		this.clientSocket.write(message);
+		sendLog('sending - ' + message)
+		this.clientSocket.write(message
+			// ,
+			// (err) => {
+			// 	if (!err) {
+			// 		sendLog('sent - ' + message)
+			// 	} else {
+			// 		offLog('send error - ' + message)
+			// 	}
+			// }
+		);
 	}
 
-	public close(){
+	public close() {
 		this.clientSocket.end();
 	}
 
-	public setTimeout(timeout: number){
+	public setTimeout(timeout: number) {
 		this.clientSocket.setTimeout(timeout);
 	}
 
@@ -63,7 +73,7 @@ export class SocketClient {
 			callback();
 		})
 	}
-	
+
 	public removeAllListeners() {
 		this.clientSocket.removeAllListeners();
 	}

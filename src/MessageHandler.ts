@@ -1,13 +1,17 @@
 import { DeviceList } from './Devices/DeviceList';
+import { log, receiveLog } from './log';
 import { Messages } from './messages';
 import { SocketClient } from './Socket/client'
-const zccIp = '192.168.0.95';
+// const zccIp = '192.168.0.95';
+const zccIp = '172.20.10.11'
 const zccPort = 5003;
 
 enum States {
     PRE,
     REQUEST_PROPERTIES,
     RECEIVE_PROPERTIES,
+    REQUEST_ACTIONS,
+    RECEIVE_ACTIONS,
     REQUEST_STATES,
     RECEIVE_STATES,
     REQUEST_STATE_EVENTS,
@@ -48,8 +52,9 @@ export class MessageHandler {
         const strMessage = Buffer.from(message).toString()
         try {
             const jsonMessage = JSON.parse(strMessage);
-            console.log('received message: ')
-            console.log(strMessage);
+            
+            receiveLog('received message: ')
+            receiveLog(strMessage);
             this.messageReceiveHandler(jsonMessage)
         } catch (err) {
 
@@ -63,6 +68,10 @@ export class MessageHandler {
                 this.state = States.REQUEST_PROPERTIES;
                 break;
             case States.RECEIVE_PROPERTIES:
+                this.clientSocket.sendData(Messages.getCPActionsMessage());
+                this.state = States.REQUEST_ACTIONS;
+                break;
+            case States.RECEIVE_ACTIONS:
                 this.clientSocket.sendData(Messages.getCPStateMessage());
                 this.state = States.REQUEST_STATES;
                 break;
@@ -73,15 +82,24 @@ export class MessageHandler {
             case States.RECEIVE_STATE_EVENTS:
                 this.state = States.SENT_TOGGLE_ACTION;
                 // this.setTimeout(10000).then(() => {
-                    setInterval(() => {
+                setInterval(() => {
 
-                        const actions = this.deviceList.toggleOnOffMessages();
-                        // actions.forEach(action =>{
-                        //     this.clientSocket.sendData(Messages.getCPSetActions([action]));
-                        // })
+                    this.deviceList.displayDeviceStatus();
+                    // const actions = this.deviceList.toggleOnOffMessages();
+                    // this.clientSocket.sendData(Messages.getCPSetActions(actions));
+
+                    // actions.forEach(action =>{
+                    //     this.clientSocket.sendData(Messages.getCPSetActions([action]));
+                    // })
+
+                    const actions = this.deviceList.toggleOnOffAllMessages(true);
+                    this.clientSocket.sendData(Messages.getCPSetActions(actions));
+                    setTimeout(  () => {
+                        const actions = this.deviceList.toggleOnOffAllMessages(false);
                         this.clientSocket.sendData(Messages.getCPSetActions(actions));
-
                     }, 10000)
+
+                }, 30000)
                 // })
                 break;
             case States.SENT_TOGGLE_ACTION:
@@ -102,24 +120,33 @@ export class MessageHandler {
 
         if (message) {
             const responseData = message.response;
-            if (responseData.controlpoint_properties) {
+            if (States.REQUEST_PROPERTIES && responseData.controlpoint_properties) {
                 responseData.controlpoint_properties.forEach((devProps: any) => {
                     this.deviceList.addDevice(devProps.id)
                     this.deviceList.setDeviceProps(devProps.id, devProps.properties)
                 })
                 this.state = States.RECEIVE_PROPERTIES;
-            } else if (responseData.controlpoint_states) {
+            }
+            else if (States.REQUEST_ACTIONS && responseData.controlpoint_actions) {
+                this.state = States.RECEIVE_ACTIONS;
+            }
+            else if (responseData.controlpoint_states) {
                 responseData.controlpoint_states.forEach((devStates: any) => {
                     this.deviceList.addDevice(devStates.id)
                     this.deviceList.setDeviceStates(devStates.id, devStates.states)
                 })
-                this.state = States.RECEIVE_STATES
+
+                this.deviceList.displayDeviceStatus()
+                if (this.state = States.REQUEST_STATES) {
+                    this.state = States.RECEIVE_STATES
+                }
             }
             else if (responseData.controlpoint_states_events) {
                 responseData.controlpoint_states_events.forEach((devStates: any) => {
                     this.deviceList.addDevice(devStates.id)
                     this.deviceList.setDeviceStates(devStates.id, devStates.states)
                 })
+                this.deviceList.displayDeviceStatus();
                 if (this.state === States.REQUEST_STATE_EVENTS) {
                     this.state = States.RECEIVE_STATE_EVENTS;
                 }

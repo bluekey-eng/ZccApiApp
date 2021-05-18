@@ -12,7 +12,7 @@ export class Messages{
     }
 
     public static getCPActionsMessage(){
-        const message = {request: {path: 'api/v1/controlpoint/actions'}}
+        const message = {request: {path: 'api/v1/controlpoint/actions',  method: 'GET'}}
         return JSON.stringify(message);
     }
 
@@ -32,12 +32,17 @@ export class Messages{
     }
 
     public static getCPStateUnSubscribeMessage(){
-        const message = {request: {path: 'api/v1/unsubscribe/controlpoint/states'}}
+        const message = {request: {path: 'api/v1/unsubscribe/controlpoint/states' , method: 'GET'}}
         return JSON.stringify(message);
     }
 
     public static getCPSetActions( actions: any){
         const message = {request: {path: 'api/v1/controlpoint/actions', method: 'POST', body: { actions} }}
         return JSON.stringify(message);
+    }
+
+    public static getEchoMessage( counter: number){
+        const message = {request: {path: 'api/v1/echo', method: 'POST', body: { counter} }}
+        return JSON.stringify(message) ;
     }
 }
