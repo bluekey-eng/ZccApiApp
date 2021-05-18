@@ -1,25 +1,10 @@
-import { HighlightSpanKind } from 'typescript';
-import { DeviceList } from './Devices/DeviceList';
+
 import { log, offLog, onLog, receiveLog } from './log';
 import { Messages } from './messages';
 import { SocketClient } from './Socket/client'
 // const zccIp = '192.168.0.95';
 const zccIp = '172.20.10.11'
 const zccPort = 5003;
-
-enum States {
-    PRE,
-    REQUEST_PROPERTIES,
-    RECEIVE_PROPERTIES,
-    REQUEST_ACTIONS,
-    RECEIVE_ACTIONS,
-    REQUEST_STATES,
-    RECEIVE_STATES,
-    REQUEST_STATE_EVENTS,
-    RECEIVE_STATE_EVENTS,
-    SENT_TOGGLE_ACTION,
-
-}
 
 interface IMessageData {
     sent: Date, received?: Date
@@ -28,10 +13,9 @@ interface IMessageData {
 export class MessageHandlerEchoTest {
 
     private clientSocket: SocketClient;
-    private state: States;
     private messageList: Map<number, IMessageData>;
     private counter = 0;
-    private messagesInParrellel = 1;
+    private messagesInParrellel = 2;
     constructor() {
         this.clientSocket = new SocketClient(zccIp, zccPort);
         this.messageList = new Map();
