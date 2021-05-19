@@ -5,9 +5,18 @@ import { SocketClient } from './Socket/client'
 // const zccIp = '192.168.0.95';
 const zccIp = '172.20.10.11'
 const zccPort = 5003;
+const MESSAGE_LIMIT = 200;
 
 interface IMessageData {
     sent: Date, received?: Date
+}
+
+
+enum States {
+    INIT,
+    SENDING,
+    WAITING,
+
 }
 
 export class MessageHandlerEchoTest {
@@ -16,6 +25,7 @@ export class MessageHandlerEchoTest {
     private messageList: Map<number, IMessageData>;
     private counter = 0;
     private messagesInParrellel = 2;
+    private state: States = States.INIT;
     constructor() {
         this.clientSocket = new SocketClient(zccIp, zccPort);
         this.messageList = new Map();
@@ -54,19 +64,25 @@ export class MessageHandlerEchoTest {
 
     private messageSendHandler() {
 
+        if (this.state === States.SENDING) {
 
-        for (let i = 0; i < this.messagesInParrellel; i++) {
-
-            setTimeout(() => {
-                this.counter++;
-                this.messageList.set(this.counter, { sent: new Date(Date.now()) })
-                this.clientSocket.sendData(Messages.getEchoMessage(this.counter));
-            }, 200*i)
+            if (this.counter < MESSAGE_LIMIT) {
+                for (let i = 0; i < this.messagesInParrellel; i++) {
+                    setTimeout(() => {
+                        this.counter++;
+                        this.messageList.set(this.counter, { sent: new Date(Date.now()) })
+                        this.clientSocket.sendData(Messages.getEchoMessage(this.counter));
+                    }, 200 * i)
+                }
+            } else {
+                this.state = States.WAITING;
+                this.displayMessagesStored()
+            }
         }
 
     }
 
-    private setTimeout(timeout: number) {
+    private wait(timeout: number) {
         return new Promise<void>((resolve, reject) => {
             setTimeout(() => {
                 resolve()
@@ -86,7 +102,10 @@ export class MessageHandlerEchoTest {
                     this.displayMessage(receivedCounter, messageStored)
                 }
             }
-            this.messageSendHandler();
+            setTimeout(() => {
+                this.messageSendHandler();
+
+            }, 500)
 
             if (this.counter % 100 === 0) {
                 this.displayMessagesStored()
@@ -112,6 +131,7 @@ export class MessageHandlerEchoTest {
     public run() {
         this.initComms()
             .then(() => {
+                this.state = States.SENDING;
                 this.messageSendHandler();
             })
     }
