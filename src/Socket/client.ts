@@ -48,7 +48,7 @@ export class SocketClient {
 
 	public sendData(message: string) {
 		sendLog('sending - ' + message)
-		this.clientSocket.write(message
+		this.clientSocket.write(message + '\r\n'
 			// ,
 			// (err) => {
 			// 	if (!err) {
