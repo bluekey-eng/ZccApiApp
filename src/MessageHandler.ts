@@ -50,15 +50,23 @@ export class MessageHandler {
 
     private receiveMessage(message: Buffer) {
         const strMessage = Buffer.from(message).toString()
-        try {
-            const jsonMessage = JSON.parse(strMessage);
-            
-            receiveLog('received message: ')
-            receiveLog(strMessage);
-            this.messageReceiveHandler(jsonMessage)
-        } catch (err) {
 
-        }
+        const splitMessages = strMessage.split('\n');
+        splitMessages.forEach(splitMessage => {
+            if( splitMessage.trim() !== ''){
+
+                try {
+                    const jsonMessage = JSON.parse(splitMessage);
+                    
+                    receiveLog('received message: ')
+                    receiveLog(splitMessage);
+                    this.messageReceiveHandler(jsonMessage)
+                } catch (err) {
+                    receiveLog('received message non json: ')
+                    receiveLog(splitMessage);
+                }
+            }
+        })
     }
 
     private messageSendHandler() {
