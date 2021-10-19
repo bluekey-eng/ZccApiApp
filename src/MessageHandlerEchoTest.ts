@@ -1,14 +1,16 @@
 
-import { log, offLog, onLog, receiveLog } from './log';
+import { log, offLog, onLog, receiveLog, receiveBuffLog } from './log';
 import { Messages } from './messages';
 import { SocketClient } from './Socket/client'
 // const zccIp = '192.168.0.95';
-const zccIp = '172.20.10.11'
+// const zccIp = '172.20.10.11'
+const zccIp = '192.168.1.105'
 const zccPort = 5003;
 const MESSAGE_LIMIT = 200;
+const MESSAGES_IN_PARRALLEL = 2;
 
 interface IMessageData {
-    sent: Date, received?: Date
+    sent: Date, received?: Date, responseTime?: number
 }
 
 
@@ -24,14 +26,17 @@ export class MessageHandlerEchoTest {
     private clientSocket: SocketClient;
     private messageList: Map<number, IMessageData>;
     private counter = 0;
-    private messagesInParrellel = 2;
+    private messagesInParrellel = MESSAGES_IN_PARRALLEL;
     private state: States = States.INIT;
+    private messageBuffer: string;
+
     constructor() {
         this.clientSocket = new SocketClient(zccIp, zccPort);
         this.messageList = new Map();
         this.receiveMessage.bind(this);
         this.messageReceiveHandler.bind(this);
-        this.messageSendHandler.bind(this)
+        this.messageSendHandler.bind(this);
+        this.messageBuffer = ''
     }
 
     private initComms() {
@@ -50,24 +55,30 @@ export class MessageHandlerEchoTest {
     }
 
     private receiveMessage(message: Buffer) {
-        const strMessage = Buffer.from(message).toString()
+        const strMessage = Buffer.from(message).toString();
+        receiveBuffLog('received data : ');
+        receiveBuffLog(strMessage);
+        this.messageBuffer += strMessage;
+        if (this.messageBuffer !== '' && this.messageBuffer.includes('\r\n')) {
 
-        const splitMessages = strMessage.split('\n');
-        splitMessages.forEach(splitMessage => {
-            if( splitMessage.trim() !== ''){
+            const splitMessages = this.messageBuffer.split('\r\n');
+            this.messageBuffer = this.messageBuffer.slice(this.messageBuffer.lastIndexOf('\r\n'))
+            splitMessages.forEach(splitMessage => {
+                if (splitMessage.trim() !== '') {
 
-                try {
-                    const jsonMessage = JSON.parse(splitMessage);
-                    
-                    receiveLog('received message: ')
-                    receiveLog(splitMessage);
-                    this.messageReceiveHandler(jsonMessage)
-                } catch (err) {
-                    receiveLog('received message non json: ')
-                    receiveLog(splitMessage);
+                    try {
+                        const jsonMessage = JSON.parse(splitMessage);
+
+                        receiveLog('received message: ')
+                        receiveLog(splitMessage);
+                        this.messageReceiveHandler(jsonMessage)
+                    } catch (err) {
+                        receiveLog('received message non json: ' + err)
+                        receiveLog(splitMessage);
+                    }
                 }
-            }
-        })
+            })
+        }
     }
 
     private messageSendHandler() {
@@ -78,11 +89,17 @@ export class MessageHandlerEchoTest {
                 for (let i = 0; i < this.messagesInParrellel; i++) {
                     setTimeout(() => {
                         this.counter++;
+
+                        if (this.counter % 100 === 0) {
+                            this.displayMessagesStored()
+                        }
+                        
                         this.messageList.set(this.counter, { sent: new Date(Date.now()) })
                         this.clientSocket.sendData(Messages.getEchoMessage(this.counter));
                     }, 200 * i)
                 }
-            } else {
+            } 
+            else {
                 this.state = States.WAITING;
                 this.displayMessagesStored()
             }
@@ -106,6 +123,7 @@ export class MessageHandlerEchoTest {
                 const messageStored = this.messageList.get(receivedCounter);
                 if (messageStored) {
                     messageStored.received = new Date(Date.now())
+                    messageStored.responseTime = Date.now() - ( messageStored.sent).getTime() ;
                     this.messageList.set(receivedCounter, messageStored)
                     this.displayMessage(receivedCounter, messageStored)
                 }
@@ -113,11 +131,7 @@ export class MessageHandlerEchoTest {
             setTimeout(() => {
                 this.messageSendHandler();
 
-            }, 500)
-
-            if (this.counter % 100 === 0) {
-                this.displayMessagesStored()
-            }
+            }, 100)
 
             if( this.state === States.WAITING){
                 this.displayMessagesStored()

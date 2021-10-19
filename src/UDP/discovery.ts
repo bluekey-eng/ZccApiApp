@@ -22,7 +22,7 @@ export class UdpDiscovery {
         this.server.on('message', (msg, rinfo) => {
           console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
-          setTimeout(() => { this.server.close(), this, this.server.disconnect() }, 5000)
+          // setTimeout(() => { this.server.close(), this, this.server.disconnect() }, 5000)
         });
 
         this.server.on('listening', () => {

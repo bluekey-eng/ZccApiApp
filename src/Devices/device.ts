@@ -23,6 +23,9 @@ export interface IDevice{
             fan?: {
                 isOn: boolean,
             },
+            garagedoor?: {
+                openpercentage: number;
+            }
             isConnected: boolean;
         }
     },

@@ -28,7 +28,7 @@ export class DeviceList {
         this.deviceMap.forEach(dev => {
 
             let isOn: boolean | undefined = undefined
-            switch (dev.get().properties.controlPointType) {
+            switch (dev.get().properties?.controlPointType) {
                 case 'dimmer':
                     isOn = dev.get()?.states?.controlState?.dimmer?.isOn;
                     break;
@@ -47,7 +47,7 @@ export class DeviceList {
 
                 actionsMessages.push({
                     id: dev.get().id,
-                    action: isOn===true ? "TurnOff" : "TurnOn"
+                    action: isOn === true ? "TurnOff" : "TurnOn"
                 })
             }
         })
@@ -60,7 +60,7 @@ export class DeviceList {
         this.deviceMap.forEach(dev => {
 
             let isOn: boolean | undefined = undefined
-            switch (dev.get().properties.controlPointType) {
+            switch (dev.get().properties?.controlPointType) {
                 case 'dimmer':
                     isOn = turnOn;
                     break;
@@ -79,7 +79,7 @@ export class DeviceList {
 
                 actionsMessages.push({
                     id: dev.get().id,
-                    action: isOn===true ? "TurnOff" : "TurnOn"
+                    action: isOn === true ? "TurnOff" : "TurnOn"
                 })
             }
         })
@@ -89,12 +89,12 @@ export class DeviceList {
     public displayDeviceStatus() {
 
         const actionsMessages: any[] = [];
-        console.log(' device status'  )
+        console.log(' device status')
 
         this.deviceMap.forEach(dev => {
 
             let isOn: boolean | undefined = undefined
-            switch (dev.get().properties.controlPointType) {
+            switch (dev.get().properties?.controlPointType) {
                 case 'dimmer':
                     isOn = dev.get()?.states?.controlState?.dimmer?.isOn;
                     break;
@@ -107,18 +107,21 @@ export class DeviceList {
                 case 'switch':
                     isOn = dev.get()?.states?.controlState?.switch?.isOn;
                     break;
+                case 'garagedoor':
+                    isOn = dev.get()?.states?.controlState?.garagedoor?.openpercentage > 0 ? true: false;
+                    break;
             }
 
             if (isOn !== undefined) {
                 const devObj = dev.get();
                 const logMessage = ` ${devObj.id} ${devObj.properties.name} : ${isOn}`;
-                if( isOn){
+                if (isOn) {
                     onLog(logMessage);
-                }else{
+                } else {
                     offLog(logMessage);
                 }
 
-              }
+            }
         })
     }
 }

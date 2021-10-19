@@ -1,9 +1,10 @@
 import { DeviceList } from './Devices/DeviceList';
-import { log, receiveLog } from './log';
+import { log, receiveLog, receiveBuffLog } from './log';
 import { Messages } from './messages';
 import { SocketClient } from './Socket/client'
 // const zccIp = '192.168.0.95';
-const zccIp = '172.20.10.11'
+// const zccIp = '172.20.10.11'
+const zccIp = '192.168.1.139'
 const zccPort = 5003;
 
 enum States {
@@ -24,6 +25,7 @@ export class MessageHandler {
     private clientSocket: SocketClient;
     private state: States;
     private deviceList: DeviceList;
+    private messageBuffer: string;
     constructor() {
         this.clientSocket = new SocketClient(zccIp, zccPort)
         this.deviceList = new DeviceList();
@@ -31,6 +33,7 @@ export class MessageHandler {
         this.messageReceiveHandler.bind(this);
         this.messageSendHandler.bind(this)
         this.state = States.PRE;
+        this.messageBuffer = '';
     }
 
     private initComms() {
@@ -49,24 +52,30 @@ export class MessageHandler {
     }
 
     private receiveMessage(message: Buffer) {
-        const strMessage = Buffer.from(message).toString()
+        const strMessage = Buffer.from(message).toString();
+        receiveBuffLog('received data : ');
+        receiveBuffLog(strMessage);
+        this.messageBuffer += strMessage;
+        if (this.messageBuffer !== '' && this.messageBuffer.includes('\r\n')) {
 
-        const splitMessages = strMessage.split('\n');
-        splitMessages.forEach(splitMessage => {
-            if( splitMessage.trim() !== ''){
+            const splitMessages = this.messageBuffer.split('\r\n');
+            this.messageBuffer = this.messageBuffer.slice(this.messageBuffer.lastIndexOf('\r\n'))
+            splitMessages.forEach(splitMessage => {
+                if (splitMessage.trim() !== '') {
 
-                try {
-                    const jsonMessage = JSON.parse(splitMessage);
-                    
-                    receiveLog('received message: ')
-                    receiveLog(splitMessage);
-                    this.messageReceiveHandler(jsonMessage)
-                } catch (err) {
-                    receiveLog('received message non json: ')
-                    receiveLog(splitMessage);
+                    try {
+                        const jsonMessage = JSON.parse(splitMessage);
+
+                        receiveLog('received message: ')
+                        receiveLog(splitMessage);
+                        this.messageReceiveHandler(jsonMessage)
+                    } catch (err) {
+                        receiveLog('received message non json: ' + err)
+                        receiveLog(splitMessage);
+                    }
                 }
-            }
-        })
+            })
+        }
     }
 
     private messageSendHandler() {
@@ -93,21 +102,25 @@ export class MessageHandler {
                 setInterval(() => {
 
                     this.deviceList.displayDeviceStatus();
+
                     // const actions = this.deviceList.toggleOnOffMessages();
                     // this.clientSocket.sendData(Messages.getCPSetActions(actions));
+
+
 
                     // actions.forEach(action =>{
                     //     this.clientSocket.sendData(Messages.getCPSetActions([action]));
                     // })
 
+
                     const actions = this.deviceList.toggleOnOffAllMessages(true);
                     this.clientSocket.sendData(Messages.getCPSetActions(actions));
-                    setTimeout(  () => {
+                    setTimeout(() => {
                         const actions = this.deviceList.toggleOnOffAllMessages(false);
                         this.clientSocket.sendData(Messages.getCPSetActions(actions));
-                    }, 10000)
+                    }, 30000)
 
-                }, 30000)
+                }, 60000)
                 // })
                 break;
             case States.SENT_TOGGLE_ACTION:
@@ -128,18 +141,26 @@ export class MessageHandler {
 
         if (message) {
             const responseData = message.response;
-            if (States.REQUEST_PROPERTIES && responseData.controlpoint_properties) {
+
+            if (responseData.controlpoint_properties) {
                 responseData.controlpoint_properties.forEach((devProps: any) => {
                     this.deviceList.addDevice(devProps.id)
                     this.deviceList.setDeviceProps(devProps.id, devProps.properties)
                 })
-                this.state = States.RECEIVE_PROPERTIES;
+
+                if (States.REQUEST_PROPERTIES) {
+                    this.state = States.RECEIVE_PROPERTIES;
+                }
             }
-            else if (States.REQUEST_ACTIONS && responseData.controlpoint_actions) {
-                this.state = States.RECEIVE_ACTIONS;
+            else if (responseData.controlpoint_actions) {
+                if (States.REQUEST_ACTIONS) {
+                    this.state = States.RECEIVE_ACTIONS;
+                }
             }
             else if (responseData.controlpoint_states) {
-                responseData.controlpoint_states.forEach((devStates: any) => {
+
+                const states = responseData.controlpoint_states;
+                states.forEach((devStates: any) => {
                     this.deviceList.addDevice(devStates.id)
                     this.deviceList.setDeviceStates(devStates.id, devStates.states)
                 })
