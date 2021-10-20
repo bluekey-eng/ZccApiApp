@@ -1,6 +1,12 @@
 
 export class Messages{
 
+    public static startSessionMessage(){
+
+        const message = {"request":{"type":"start_session","params":{"appId":"_g2RkgNN", "deviceMac": "0123456789B4", "accessToken":"0f5ffb2fb2304c33bd4d6a205a7266c7"}}}
+        return JSON.stringify(message);
+    }
+
     public static getCPPropertiesMessage(){
         const message = {request: {path: 'api/v1/controlpoint/properties'}}
         return JSON.stringify(message);

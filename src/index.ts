@@ -7,8 +7,8 @@ const run = async () =>{
     const udpDiscovery = new UdpDiscovery(5002)
     udpDiscovery.listen();
 
-    // const msgHandler = new MessageHandler();
-    // msgHandler.run();
+    const msgHandler = new MessageHandler();
+    msgHandler.run();
 }
 
 run();

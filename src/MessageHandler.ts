@@ -4,19 +4,27 @@ import { Messages } from './messages';
 import { SocketClient } from './Socket/client'
 // const zccIp = '192.168.0.95';
 // const zccIp = '172.20.10.11'
-const zccIp = '192.168.1.139'
+// const zccIp = '192.168.1.139'
+const zccIp = '10.0.0.31';
 const zccPort = 5003;
 
 enum States {
+    PRE_STARTSESSION,
+    POST_STARTSESSION,
     PRE,
     REQUEST_PROPERTIES,
+    REQUESTED_PROPERTIES,
     RECEIVE_PROPERTIES,
     REQUEST_ACTIONS,
+    REQUESTED_ACTIONS,
     RECEIVE_ACTIONS,
     REQUEST_STATES,
+    REQUESTED_STATES,
     RECEIVE_STATES,
     REQUEST_STATE_EVENTS,
+    REQUESTED_STATE_EVENTS,
     RECEIVE_STATE_EVENTS,
+    RECEIVED_STATE_EVETS,
     SENT_TOGGLE_ACTION,
 
 }
@@ -32,7 +40,7 @@ export class MessageHandler {
         this.receiveMessage.bind(this);
         this.messageReceiveHandler.bind(this);
         this.messageSendHandler.bind(this)
-        this.state = States.PRE;
+        this.state = States.PRE_STARTSESSION;
         this.messageBuffer = '';
     }
 
@@ -80,47 +88,59 @@ export class MessageHandler {
 
     private messageSendHandler() {
         switch (this.state) {
+            case States.PRE_STARTSESSION:
+                this.clientSocket.sendData(Messages.startSessionMessage())
+                this.state = States.POST_STARTSESSION;
+                break;
             case States.PRE:
-                this.clientSocket.sendData(Messages.getCPPropertiesMessage())
-                this.state = States.REQUEST_PROPERTIES;
+                // this.clientSocket.sendData(Messages.getCPPropertiesMessage())
+                // this.state = States.REQUESTED_PROPERTIES;
                 break;
             case States.RECEIVE_PROPERTIES:
-                this.clientSocket.sendData(Messages.getCPActionsMessage());
-                this.state = States.REQUEST_ACTIONS;
+                // this.clientSocket.sendData(Messages.getCPActionsMessage());
+                // this.state = States.REQUEST_ACTIONS;
+
+                // this.clientSocket.sendData(Messages.getCPStateMessage());
+                // this.state = States.REQUESTED_STATES;
+
                 break;
             case States.RECEIVE_ACTIONS:
                 this.clientSocket.sendData(Messages.getCPStateMessage());
-                this.state = States.REQUEST_STATES;
+                this.state = States.REQUESTED_STATES;
                 break;
             case States.RECEIVE_STATES:
-                this.clientSocket.sendData(Messages.getCPStateSubscribeMessage());
-                this.state = States.REQUEST_STATE_EVENTS;
+                // this.clientSocket.sendData(Messages.getCPStateSubscribeMessage());
+                // this.state = States.REQUESTED_STATE_EVENTS;
                 break;
             case States.RECEIVE_STATE_EVENTS:
-                this.state = States.SENT_TOGGLE_ACTION;
                 // this.setTimeout(10000).then(() => {
-                setInterval(() => {
+                if (this.state === States.RECEIVE_STATE_EVENTS) {
 
-                    this.deviceList.displayDeviceStatus();
+                    // setInterval(() => {
 
-                    // const actions = this.deviceList.toggleOnOffMessages();
-                    // this.clientSocket.sendData(Messages.getCPSetActions(actions));
+                    //     this.deviceList.displayDeviceStatus();
 
-
-
-                    // actions.forEach(action =>{
-                    //     this.clientSocket.sendData(Messages.getCPSetActions([action]));
-                    // })
+                    //     // const actions = this.deviceList.toggleOnOffMessages();
+                    //     // this.clientSocket.sendData(Messages.getCPSetActions(actions));
 
 
-                    const actions = this.deviceList.toggleOnOffAllMessages(true);
-                    this.clientSocket.sendData(Messages.getCPSetActions(actions));
-                    setTimeout(() => {
-                        const actions = this.deviceList.toggleOnOffAllMessages(false);
-                        this.clientSocket.sendData(Messages.getCPSetActions(actions));
-                    }, 30000)
 
-                }, 60000)
+                    //     // actions.forEach(action =>{
+                    //     //     this.clientSocket.sendData(Messages.getCPSetActions([action]));
+                    //     // })
+
+
+                    //     const actions = this.deviceList.toggleOnOffAllMessages(true);
+                    //     this.clientSocket.sendData(Messages.getCPSetActions(actions));
+                    //     setTimeout(() => {
+                    //         const actions = this.deviceList.toggleOnOffAllMessages(false);
+                    //         this.clientSocket.sendData(Messages.getCPSetActions(actions));
+                    //     }, 30000)
+
+                    // }, 10000)
+                }
+                this.state = States.RECEIVED_STATE_EVETS;
+
                 // })
                 break;
             case States.SENT_TOGGLE_ACTION:
@@ -142,18 +162,26 @@ export class MessageHandler {
         if (message) {
             const responseData = message.response;
 
+            if (responseData.start_session_success) {
+                this.state = States.PRE;
+                this.clientSocket.sendData(Messages.getCPPropertiesMessage())
+                this.state = States.REQUESTED_PROPERTIES;
+            }
             if (responseData.controlpoint_properties) {
                 responseData.controlpoint_properties.forEach((devProps: any) => {
                     this.deviceList.addDevice(devProps.id)
                     this.deviceList.setDeviceProps(devProps.id, devProps.properties)
                 })
 
-                if (States.REQUEST_PROPERTIES) {
-                    this.state = States.RECEIVE_PROPERTIES;
+                if (this.state === States.REQUESTED_PROPERTIES) {
+                    // this.state = States.RECEIVE_PROPERTIES;
+
+                    this.clientSocket.sendData(Messages.getCPStateMessage());
+                    this.state = States.REQUESTED_STATES;
                 }
             }
             else if (responseData.controlpoint_actions) {
-                if (States.REQUEST_ACTIONS) {
+                if (this.state === States.REQUEST_ACTIONS) {
                     this.state = States.RECEIVE_ACTIONS;
                 }
             }
@@ -166,8 +194,11 @@ export class MessageHandler {
                 })
 
                 this.deviceList.displayDeviceStatus()
-                if (this.state = States.REQUEST_STATES) {
-                    this.state = States.RECEIVE_STATES
+                if (this.state === States.REQUESTED_STATES) {
+                    // this.state = States.RECEIVE_STATES
+
+                    this.clientSocket.sendData(Messages.getCPStateSubscribeMessage());
+                    this.state = States.REQUESTED_STATE_EVENTS;
                 }
             }
             else if (responseData.controlpoint_states_events) {
@@ -176,12 +207,35 @@ export class MessageHandler {
                     this.deviceList.setDeviceStates(devStates.id, devStates.states)
                 })
                 this.deviceList.displayDeviceStatus();
-                if (this.state === States.REQUEST_STATE_EVENTS) {
+                if (this.state === States.REQUESTED_STATE_EVENTS) {
                     this.state = States.RECEIVE_STATE_EVENTS;
+
+                    setInterval(() => {
+
+                        this.deviceList.displayDeviceStatus();
+
+                        // const actions = this.deviceList.toggleOnOffMessages();
+                        // this.clientSocket.sendData(Messages.getCPSetActions(actions));
+
+
+
+                        // actions.forEach(action =>{
+                        //     this.clientSocket.sendData(Messages.getCPSetActions([action]));
+                        // })
+
+
+                        const actions = this.deviceList.toggleOnOffAllMessages(true);
+                        this.clientSocket.sendData(Messages.getCPSetActions(actions));
+                        setTimeout(() => {
+                            const actions = this.deviceList.toggleOnOffAllMessages(false);
+                            this.clientSocket.sendData(Messages.getCPSetActions(actions));
+                        }, 10000)
+
+                    }, 20000)
                 }
             }
 
-            this.messageSendHandler();
+            // this.messageSendHandler();
         }
     }
 
