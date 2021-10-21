@@ -4,11 +4,7 @@ import { log, receiveLog, receiveBuffLog } from './log';
 import { Messages } from './messages';
 import { SocketClient } from './Socket/client'
 import { AppStorage } from './Storage/AppStorage';
-// const zccIp = '192.168.0.95';
-// const zccIp = '172.20.10.11'
-// const zccIp = '192.168.1.139'
-const zccIp = '192.168.86.120';
-const zccPort = 5003;
+
 
 const appId = '_g2RkgNN';
 const appToken = 'd2a49da8-b3e1-4957-ac4a-bd25a62e99dd'
@@ -44,16 +40,19 @@ export class MessageHandler {
     private appStorage: AppStorage;
 
     private zimiEventEmitter: ZimiEvents;
-    constructor() {
+    constructor(zccIp: string, zccPort: number, zccMac: string) {
         this.clientSocket = new SocketClient(zccIp, zccPort)
         this.deviceList = new DeviceList();
         this.zimiEventEmitter = new ZimiEvents();
-        this.appStorage = new AppStorage();
+        this.appStorage = new AppStorage(zccMac);
+
+        this.state = States.PRE_AUTHAPP;
+        this.messageBuffer = '';
+
         this.receiveMessage.bind(this);
         this.messageReceiveHandler.bind(this);
         this.messageSendHandler.bind(this)
-        this.state = States.PRE_AUTHAPP;
-        this.messageBuffer = '';
+
 
 
     }
@@ -212,7 +211,7 @@ export class MessageHandler {
                         .then(ret => {
                             this.appStorage.getItem('deviceMac')
                                 .then(deviceMac => {
-                                    this.clientSocket.sendData(Messages.startSessionMessage(appId, ret, deviceMac));
+                                    this.clientSocket.sendData(Messages.startSessionMessage(appId, accessToken, deviceMac));
                                     this.state = States.POST_STARTSESSION;
                                 })
                         })
@@ -305,7 +304,7 @@ export class MessageHandler {
 
     private receiveEvents() {
         this.zimiEventEmitter.onReceiveApiMessage((message, messageType) => {
-            receiveLog(`onReceiveApiMessage ${messageType} , ${JSON.stringify(message)}`)
+            // receiveLog(`onReceiveApiMessage ${messageType} , ${JSON.stringify(message)}`)
         })
     }
 

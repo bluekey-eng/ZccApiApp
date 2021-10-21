@@ -5,13 +5,15 @@ export type Element = 'deviceMac' | 'accessToken'
 
 export class AppStorage{
 
-    constructor(){
+    private deviceId: string;
+    constructor(deviceId: string){
         LocalStorage.getInstance();
+        this.deviceId = deviceId;
     }
 
     public getItem(element: Element): Promise<any>{
         return new Promise<any>((resolve, reject)=>{            
-            LocalStorage.getInstance().getItem(element)
+            LocalStorage.getInstance().getItem( this.deviceId, element)
             .then( ret => {
                 if(ret === undefined && element === 'deviceMac'){
                     const mac = this.genMAC();
@@ -32,7 +34,7 @@ export class AppStorage{
 
     public setItem(element: Element, value: any): Promise<any> {
         return new Promise<any> ((resolve, reject)=>{
-            LocalStorage.getInstance().setItem(element, value)
+            LocalStorage.getInstance().setItem(this.deviceId, element, value)
             .then(ret =>{
                 resolve(ret)
             }).catch(err => {

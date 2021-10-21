@@ -18,9 +18,10 @@ export class LocalStorage{
         return this.instance;
     }
 
-    public  setItem( key: string, value: any){
+    public  setItem( deviceId: string,  key: string, value: any){
         
-        return storage.setItem(key, value)
+        const storeKey = this.getStoreKey(deviceId,key)
+        return storage.setItem(storeKey, value)
         .then(ret => {
              return ret;
 
@@ -32,9 +33,9 @@ export class LocalStorage{
 
     }
 
-    public getItem(key: string): Promise<any> {
+    public getItem( deviceId: string, key: string): Promise<any> {
         return new Promise<any>((resolve, reject)=>{
-            return storage.getItem(key)
+            return storage.getItem(this.getStoreKey(deviceId,key))
             .then(ret => {
                 resolve(ret);
     
@@ -45,6 +46,11 @@ export class LocalStorage{
             })
 
         })
+    }
+
+    private getStoreKey( deviceId: string, key: string){
+        return `${deviceId}_${key}`
+
     }
 
 }
