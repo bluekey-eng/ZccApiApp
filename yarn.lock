@@ -2,6 +2,18 @@
 # yarn lockfile v1
 
 
+"@types/node-persist@^3.1.2":
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/@types/node-persist/-/node-persist-3.1.2.tgz#88020628a0124836e98e5c1060591b2dade2bb4a"
+  integrity sha512-aLFUB1951wOfR+tZ4f3TudLPblo9+PfnduMh6feuOTijD0Q6YkMdqPXSgQIjI23FGmCuoZaIZ9x6cvEG/TdiSg==
+  dependencies:
+    "@types/node" "*"
+
+"@types/node@*":
+  version "16.11.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-16.11.1.tgz#2e50a649a50fc403433a14f829eface1a3443e97"
+  integrity sha512-PYGcJHL9mwl1Ek3PLiYgyEKtwTMmkMw4vbiyz/ps3pfdRYLVv+SN7qHVAImrjdAXxgluDEw6Ph4lyv+m9UpRmA==
+
 "@types/node@^13.9.3":
   version "13.13.51"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-13.13.51.tgz#a424c5282f99fc1ca41f11b727b6aea80668bcba"
@@ -38,6 +50,11 @@ has-flag@^4.0.0:
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/has-flag/-/has-flag-4.0.0.tgz#944771fd9c81c81265c4d6941860da06bb59479b"
   integrity sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==
+
+node-persist@^3.1.0:
+  version "3.1.0"
+  resolved "https://registry.yarnpkg.com/node-persist/-/node-persist-3.1.0.tgz#9d4b03950bba70d37d13d3d3551840e25fd17e09"
+  integrity sha512-/j+fd/u71wNgKf3V2bx4tnDm+3GvLnlCuvf2MXbJ3wern+67IAb6zN9Leu1tCWPlPNZ+v1hLSibVukkPK2HqJw==
 
 supports-color@^7.1.0:
   version "7.2.0"

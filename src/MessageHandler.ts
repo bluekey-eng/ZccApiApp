@@ -1,14 +1,21 @@
 import { DeviceList } from './Devices/DeviceList';
+import { ZimiEvents } from './Events/ZimiEvents';
 import { log, receiveLog, receiveBuffLog } from './log';
 import { Messages } from './messages';
 import { SocketClient } from './Socket/client'
+import { AppStorage } from './Storage/AppStorage';
 // const zccIp = '192.168.0.95';
 // const zccIp = '172.20.10.11'
 // const zccIp = '192.168.1.139'
-const zccIp = '10.0.0.31';
+const zccIp = '192.168.86.120';
 const zccPort = 5003;
 
+const appId = '_g2RkgNN';
+const appToken = 'd2a49da8-b3e1-4957-ac4a-bd25a62e99dd'
+
 enum States {
+    PRE_AUTHAPP,
+    POST_AUTHAPP,
     PRE_STARTSESSION,
     POST_STARTSESSION,
     PRE,
@@ -34,18 +41,26 @@ export class MessageHandler {
     private state: States;
     private deviceList: DeviceList;
     private messageBuffer: string;
+    private appStorage: AppStorage;
+
+    private zimiEventEmitter: ZimiEvents;
     constructor() {
         this.clientSocket = new SocketClient(zccIp, zccPort)
         this.deviceList = new DeviceList();
+        this.zimiEventEmitter = new ZimiEvents();
+        this.appStorage = new AppStorage();
         this.receiveMessage.bind(this);
         this.messageReceiveHandler.bind(this);
         this.messageSendHandler.bind(this)
-        this.state = States.PRE_STARTSESSION;
+        this.state = States.PRE_AUTHAPP;
         this.messageBuffer = '';
+
+
     }
 
     private initComms() {
         return new Promise<void>((resolve, reject) => {
+
 
             const receiveHandler = this.receiveMessage.bind(this)
             this.clientSocket.connect()
@@ -76,6 +91,7 @@ export class MessageHandler {
 
                         receiveLog('received message: ')
                         receiveLog(splitMessage);
+
                         this.messageReceiveHandler(jsonMessage)
                     } catch (err) {
                         receiveLog('received message non json: ' + err)
@@ -88,9 +104,35 @@ export class MessageHandler {
 
     private messageSendHandler() {
         switch (this.state) {
+            case States.PRE_AUTHAPP:
+                this.appStorage.getItem('deviceMac')
+                    .then(deviceMac => {
+                        if (deviceMac === undefined) {
+                            deviceMac = '00000000000A';
+                        }
+
+                        this.appStorage.getItem('accessToken')
+                        .then( accessToken => {
+
+                            if( !accessToken){
+
+                                this.clientSocket.sendData(Messages.getAuthAppMessage(appId, appToken, deviceMac))
+                                this.state = States.POST_AUTHAPP;
+                            }else{
+                                this.clientSocket.sendData(Messages.startSessionMessage(appId, accessToken, deviceMac))
+                                this.state = States.POST_STARTSESSION;
+                            }
+                        })
+                        .catch(err => {
+                            log( 'appStorage.getItem error ' + err.message)
+                        })
+
+                    })
+                break;
+
             case States.PRE_STARTSESSION:
-                this.clientSocket.sendData(Messages.startSessionMessage())
-                this.state = States.POST_STARTSESSION;
+                // this.clientSocket.sendData(Messages.startSessionMessage())
+                // this.state = States.POST_STARTSESSION;
                 break;
             case States.PRE:
                 // this.clientSocket.sendData(Messages.getCPPropertiesMessage())
@@ -162,12 +204,31 @@ export class MessageHandler {
         if (message) {
             const responseData = message.response;
 
+            if (responseData.auth_app_success) {
+                this.zimiEventEmitter.receiveApiMessage(message, 'auth_app_success');
+                const accessToken = responseData.auth_app_success.accessToken;
+                if (accessToken) {
+                    this.appStorage.setItem('accessToken', accessToken)
+                        .then(ret => {
+                            this.appStorage.getItem('deviceMac')
+                                .then(deviceMac => {
+                                    this.clientSocket.sendData(Messages.startSessionMessage(appId, ret, deviceMac));
+                                    this.state = States.POST_STARTSESSION;
+                                })
+                        })
+
+                }
+            }
             if (responseData.start_session_success) {
+                this.zimiEventEmitter.receiveApiMessage(message, 'start_session_pass');
+
                 this.state = States.PRE;
                 this.clientSocket.sendData(Messages.getCPPropertiesMessage())
                 this.state = States.REQUESTED_PROPERTIES;
             }
             if (responseData.controlpoint_properties) {
+                this.zimiEventEmitter.receiveApiMessage(message, 'properties');
+
                 responseData.controlpoint_properties.forEach((devProps: any) => {
                     this.deviceList.addDevice(devProps.id)
                     this.deviceList.setDeviceProps(devProps.id, devProps.properties)
@@ -186,6 +247,7 @@ export class MessageHandler {
                 }
             }
             else if (responseData.controlpoint_states) {
+                this.zimiEventEmitter.receiveApiMessage(message, 'states');
 
                 const states = responseData.controlpoint_states;
                 states.forEach((devStates: any) => {
@@ -202,6 +264,8 @@ export class MessageHandler {
                 }
             }
             else if (responseData.controlpoint_states_events) {
+                this.zimiEventEmitter.receiveApiMessage(message, 'state_events');
+
                 responseData.controlpoint_states_events.forEach((devStates: any) => {
                     this.deviceList.addDevice(devStates.id)
                     this.deviceList.setDeviceStates(devStates.id, devStates.states)
@@ -239,10 +303,20 @@ export class MessageHandler {
         }
     }
 
+    private receiveEvents() {
+        this.zimiEventEmitter.onReceiveApiMessage((message, messageType) => {
+            receiveLog(`onReceiveApiMessage ${messageType} , ${JSON.stringify(message)}`)
+        })
+    }
+
     public run() {
         this.initComms()
             .then(() => {
+                this.receiveEvents();
                 this.messageSendHandler();
+            })
+            .catch(err => {
+                log('connection failed ' + err.message)
             })
     }
 }

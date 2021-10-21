@@ -17,8 +17,9 @@ export class SocketClient {
 			let socket = new net.Socket();
 			try {
 				// console.log(`Connecting to ${this.ip}: ${this.port} `)
-				this.clientSocket = socket.connect(this.port, this.ip, () => {
-					// console.log(`connected to ${this.ip} : ${this.port}`);
+				this.clientSocket = socket.connect(this.port,
+					 this.ip, () => {
+					console.log(`connected to ${this.ip} : ${this.port}`);
 					resolve();
 				})
 			} catch (error) {
