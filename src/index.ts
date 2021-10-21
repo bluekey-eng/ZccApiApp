@@ -1,3 +1,4 @@
+import { ZccApiClient } from "./Client/ZccApiClient";
 import { MessageHandler } from "./MessageHandler"
 import { MessageHandlerEchoTest } from "./MessageHandlerEchoTest"
 
@@ -14,7 +15,7 @@ const run = async () => {
     const udpDiscovery = new UdpDiscovery(5002)
     udpDiscovery.listen();
 
-    const msgHandler = new MessageHandler(zccIp, zccPort, zccMac);
+    const msgHandler = new ZccApiClient({zccIp, zccPort, zccMac});
     msgHandler.run();
 
     process.on('uncaughtException', function (err) {

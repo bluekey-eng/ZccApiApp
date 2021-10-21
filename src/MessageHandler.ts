@@ -219,7 +219,7 @@ export class MessageHandler {
                 }
             }
             if (responseData.start_session_success) {
-                this.zimiEventEmitter.receiveApiMessage(message, 'start_session_pass');
+                this.zimiEventEmitter.receiveApiMessage(message, 'start_session_success');
 
                 this.state = States.PRE;
                 this.clientSocket.sendData(Messages.getCPPropertiesMessage())
