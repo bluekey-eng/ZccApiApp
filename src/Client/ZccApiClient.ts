@@ -23,6 +23,28 @@ export class ZccApiClient{
         this.messageBuffer = '';
     }
 
+
+    public run() {
+        this.initComms()
+            .then(() => {
+                this.receiveEvents();
+                // this.messageSendHandler();
+                this.apiProcessor.run();
+            })
+            .catch(err => {
+                log('connection failed ' + err.message)
+            })
+    }
+
+    public stop(){
+        this.stopComms();
+        this.stopEvents();
+    }
+
+    public getEventEmitter(): ZimiEvents{
+        return this.zimiEventEmitter
+    }
+
     private initComms() {
         return new Promise<void>((resolve, reject) => {
 
@@ -37,6 +59,15 @@ export class ZccApiClient{
                     reject(err)
                 })
         })
+    }
+
+    private stopComms(){
+        this.clientSocket.close();
+        this.clientSocket.removeAllListeners();
+    }
+
+    private stopEvents(){
+        this.zimiEventEmitter.removeAllListeners();
     }
 
     private receiveMessage(message: Buffer) {
@@ -85,6 +116,7 @@ export class ZccApiClient{
             }
 
             if (responseData.controlpoint_actions) {
+                this.zimiEventEmitter.receiveApiMessage(message, 'actions');
 
             }
             
@@ -99,26 +131,15 @@ export class ZccApiClient{
         }
     }
 
-    private sendMessage( message: string){
+    private sendMessage( message: object){
         this.clientSocket.sendData(message)
     }
 
     private receiveEvents() {
         this.zimiEventEmitter.onSendApiMessage((message, messageType) => {
-            this.sendMessage( message);
+            this.sendMessage( (message));
             // receiveLog(`onReceiveApiMessage ${messageType} , ${JSON.stringify(message)}`)
         })
     }
 
-    public run() {
-        this.initComms()
-            .then(() => {
-                this.receiveEvents();
-                // this.messageSendHandler();
-                this.apiProcessor.run();
-            })
-            .catch(err => {
-                log('connection failed ' + err.message)
-            })
-    }
 }

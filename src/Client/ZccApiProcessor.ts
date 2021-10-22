@@ -138,26 +138,26 @@ export class ZccApiProcessor{
                 if (this.states.sendActionsStarted === false) {
                     this.states.sendActionsStarted = true;
 
-                    setInterval(() => {
+                    // setInterval(() => {
 
-                        // this.deviceList.displayDeviceStatus();
+                    //     // this.deviceList.displayDeviceStatus();
 
-                        // const actions = this.deviceList.toggleOnOffMessages();
-                        // this.clientSocket.sendData(Messages.getCPSetActions(actions));
+                    //     // const actions = this.deviceList.toggleOnOffMessages();
+                    //     // this.clientSocket.sendData(Messages.getCPSetActions(actions));
 
-                        // actions.forEach(action =>{
-                        //     this.clientSocket.sendData(Messages.getCPSetActions([action]));
-                        // })
+                    //     // actions.forEach(action =>{
+                    //     //     this.clientSocket.sendData(Messages.getCPSetActions([action]));
+                    //     // })
 
 
-                        const actions = this.deviceList.toggleOnOffAllMessages(true);
-                        this.sendMessage(Messages.getCPSetActions(actions));
-                        setTimeout(() => {
-                            const actions = this.deviceList.toggleOnOffAllMessages(false);
-                            this.sendMessage(Messages.getCPSetActions(actions));
-                        }, 10000)
+                    //     const actions = this.deviceList.toggleOnOffAllMessages(true);
+                    //     this.sendMessage(Messages.getCPSetActions(actions));
+                    //     setTimeout(() => {
+                    //         const actions = this.deviceList.toggleOnOffAllMessages(false);
+                    //         this.sendMessage(Messages.getCPSetActions(actions));
+                    //     }, 10000)
 
-                    }, 20000)
+                    // }, 20000)
                 }
             }
 
@@ -165,7 +165,7 @@ export class ZccApiProcessor{
         }
     }
 
-    private sendMessage(message: any){
+    private sendMessage(message: object){
         this.zimiEventEmitter.sendApiMessage(message, 'auth_app'); // TODO messageType
     }
 

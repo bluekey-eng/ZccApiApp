@@ -47,9 +47,10 @@ export class SocketClient {
 		this.clientSocket.removeListener('data', callback)
 	}
 
-	public sendData(message: string) {
-		sendLog('sending - ' + message)
-		this.clientSocket.write(message + '\r\n'
+	public sendData(message: object) {
+		const stringMessage = JSON.stringify(message);
+		sendLog('sending - ' + stringMessage)
+		this.clientSocket.write(stringMessage + '\r\n'
 			// ,
 			// (err) => {
 			// 	if (!err) {

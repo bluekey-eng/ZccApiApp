@@ -3,15 +3,15 @@ import { EventEmitter } from "events";
 import { IDevice } from '../Devices/device'
 export type ZimiEventType = 'sendApiMessage' | 'receiveApiMessage' | 'updateDeviceProperties' | 'updateDeviceStates' | 'setDeviceAction';
 export type ZimiSendMessageType = 'auth_app' | 'start_session' | 'get_properties' | 'get_states';
-export type ZimiReceiveMessageType = 'auth_app_success' | 'auth_app_failed' | 'start_session_success' | 'start_session_failed' | 'properties' | 'states' | 'state_events'
+export type ZimiReceiveMessageType = 'auth_app_success' | 'auth_app_failed' | 'start_session_success' | 'start_session_failed' | 'properties' | 'states' | 'state_events' | 'actions'
 
 export class ZimiEvents extends EventEmitter {
 
-    public sendApiMessage(message: string, messageType: ZimiSendMessageType) {
+    public sendApiMessage(message: object, messageType: ZimiSendMessageType) {
         this.emit('sendApiMessage', { messageType, message });
     }
 
-    public onSendApiMessage(callback: (message: string, messageType: ZimiSendMessageType) => void) {
+    public onSendApiMessage(callback: (message: object, messageType: ZimiSendMessageType) => void) {
         this.on('sendApiMessage', data => {
             callback(data.message, data.messageType);
         });
@@ -19,11 +19,11 @@ export class ZimiEvents extends EventEmitter {
 
     
 
-    public receiveApiMessage(message: string, messageType: ZimiReceiveMessageType) {
+    public receiveApiMessage(message: object, messageType: ZimiReceiveMessageType) {
         this.emit('receiveApiMessage', { messageType, message });
     }
 
-    public onReceiveApiMessage(callback: (message: string, messageType: ZimiSendMessageType) => void) {
+    public onReceiveApiMessage(callback: (message: object, messageType: ZimiSendMessageType) => void) {
         this.on('receiveApiMessage', data => {
             callback(data.message, data.messageType);
         });
