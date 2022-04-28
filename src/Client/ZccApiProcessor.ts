@@ -98,6 +98,7 @@ export class ZccApiProcessor{
 
                 if( this.states.propertiesRequested === false){
                     this.sendMessage(Messages.getCPPropertiesMessage())
+                    this.sendMessage(Messages.getCPPropertiesCountMessage())
                     this.states.propertiesRequested = true;
                 }
             }

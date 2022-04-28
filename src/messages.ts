@@ -20,6 +20,11 @@ export class Messages {
         return message;
     }
 
+    public static getCPPropertiesCountMessage() {
+        const message = { request: { path: 'api/v1/controlpoint/count' } }
+        return message;
+    }
+
     public static getCPStateMessage() {
         const message = { request: { path: 'api/v1/controlpoint/states' } }
         return message;
