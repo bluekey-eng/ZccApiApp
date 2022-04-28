@@ -35,7 +35,7 @@ export class UdpDiscovery {
         });
 
         this.server.on('message', (msg, rinfo) => {
-          // console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+          console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
           const foundObj = JSON.parse(msg.toString())
           const foundData: IFoundZccData = {
@@ -44,7 +44,13 @@ export class UdpDiscovery {
             mac: foundObj.mac,
             tcp: foundObj.tcp,
             availableTcps: foundObj.availableTcps,
-            host: rinfo.address
+            host: rinfo.address,
+            apiVersion: foundObj.apiVersion,
+            firmwareVersion: foundObj.firmwareVersion,
+            numberOfDevices: foundObj.numberOfDevices,
+            numberOfControlpoints: foundObj.numberOfControlPoints,
+            networkName: foundObj.networkName,
+            uptime: foundObj.uptime
           }
           this.discoveryEvents.foundZcc( foundData )
 

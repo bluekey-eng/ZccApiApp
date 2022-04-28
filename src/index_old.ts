@@ -8,7 +8,7 @@ import { WSServer } from "./WS/server";
 // const zccIp = '192.168.0.95';
 // const zccIp = '172.20.10.11'
 // const zccIp = '192.168.1.139'
-const zccIp = '192.168.86.120';
+const zccIp = '192.168.86.130';
 const zccPort = 5003;
 const zccMac = 'testmac1';
 

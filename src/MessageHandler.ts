@@ -90,8 +90,8 @@ export class MessageHandler {
 
                         receiveLog('received message: ')
                         receiveLog(splitMessage);
-
                         this.messageReceiveHandler(jsonMessage)
+                        
                     } catch (err) {
                         receiveLog('received message non json: ' + err)
                         receiveLog(splitMessage);

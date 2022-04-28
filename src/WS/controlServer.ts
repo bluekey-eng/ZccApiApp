@@ -20,7 +20,7 @@ export class WSControlServer {
             log('wsServer connection ')
 
             ws.on('message', (messageRaw) => {
-                // log('ws message received - ' + messageRaw.toString())
+                log('ws message received - ' + messageRaw.toString())
 
                 let requestObj: any = {};
                 try {
@@ -37,55 +37,65 @@ export class WSControlServer {
                     const clientParams = requestObj.request.params;
 
                     const clientCheck = this.componentStore.getZccClient(clientParams.mac);
-                    if( !clientCheck){
-                        
+                    if (!clientCheck) {
+
                         this.componentStore.addZccClient(clientParams.host, clientParams.port, clientParams.mac)
-                        
+
                         const client = this.componentStore.getZccClient(clientParams.mac);
                         client.run();
-                        
+
                         const eventEmitter = client.getEventEmitter();
-                        
+
                         eventEmitter.onReceiveApiMessage((message: any, messageType) => {
-                            const newMessagee = {...message, mac: clientParams.mac}
+                            const newMessagee =
+                            {
+                                type: 'receivedmessage',
+                                data: message,
+                                mac: clientParams.mac
+                            };
+
                             ws.send(JSON.stringify(newMessagee));
                         })
-                        
-                        
+
+
                         eventEmitter.onSendApiMessage((message: any, messageType) => {
-                            const newMessagee = {...message, mac: clientParams.mac}
-                            ws.send(JSON.stringify(newMessagee));
+                            const newMessagee =
+                            {
+                                type: 'sentmessage',
+                                data: message,
+                                mac: clientParams.mac
+                            }; ws.send(JSON.stringify(newMessagee));
                         })
-                    }else{
-                        ws.send(JSON.stringify({error: 'zcc already connected'}))
+                    } else {
+                        ws.send(JSON.stringify({ error: 'zcc already connected' }))
                     }
                 }
-                if( requestObj.request.type === 'disconnectzcc'){
+                if (requestObj.request.type === 'disconnectzcc') {
                     const clientParams = requestObj.request.params;
 
                     const clientCheck = this.componentStore.getZccClient(clientParams.mac);
-                    if( clientCheck){                        
-                        
+                    if (clientCheck) {
+
                         const client = this.componentStore.getZccClient(clientParams.mac);
                         client.stop();
-                        
+
                         this.componentStore.removeZccClient(clientParams.mac)
-                    }else{
-                        ws.send(JSON.stringify({error: 'zcc not found'}))
+                    } else {
+                        ws.send(JSON.stringify({ error: 'zcc not found' }))
                     }
                 }
-                if( requestObj.request.type === 'sendmessage' ){
+                if (requestObj.request.type === 'sendmessage') {
                     const clientParams = requestObj.request.params;
                     const mac = clientParams.mac;
                     const message = clientParams.message;
 
                     const client = this.componentStore.getZccClient(clientParams.mac);
-                    client.getEventEmitter().sendApiMessage( message, 'auth_app');
+                    client.getEventEmitter().sendApiMessage(message, 'auth_app');
                 }
             })
 
             this.componentStore.getDiscovery().getEvents().onFoundZcc(data => {
-                ws.send(JSON.stringify(data));
+                ws.send(JSON.stringify({ type: 'foundzcc', data }));
             })
 
             // ws.send('connected')
@@ -121,7 +131,7 @@ export class WSControlServer {
         "type": "sendmessage",
         "params": {
             "mac": "c4ffbc90a6fb",
-            "message": {"request": {"path": "api/v1/controlpoint/properties","method": "GET"}}            
+            "message": {"request": {"path": "api/v1/controlpoint/properties","method": "GET"}}
         }
     }
 }
@@ -131,7 +141,7 @@ export class WSControlServer {
         "type": "sendmessage",
         "params": {
             "mac": "c4ffbc90a6fb",
-            "message": {"request": {"path": "api/v1/controlpoint/states","method": "GET"}}            
+            "message": {"request": {"path": "api/v1/controlpoint/states","method": "GET"}}
         }
     }
 }

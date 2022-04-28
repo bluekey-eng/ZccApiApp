@@ -9,6 +9,12 @@ export interface IFoundZccData {
     tcp: number;
     availableTcps: number;
     host: string;
+    apiVersion?: string;
+    firmwareVersion?: string;
+    numberOfDevices: number;
+    numberOfControlpoints?: number;
+    networkName?: string;
+    uptime?: number;
 }
 
 export class ZimiDiscoveryEvents extends EventEmitter {
