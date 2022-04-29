@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 
 import { IDevice } from '../Devices/device'
 export type ZimiEventType = 'sendApiMessage' | 'receiveApiMessage' | 'updateDeviceProperties' | 'updateDeviceStates' | 'setDeviceAction';
-export type ZimiSendMessageType = 'auth_app' | 'start_session' | 'get_properties' | 'get_states';
+export type ZimiSendMessageType = 'auth_app' | 'start_session' | 'get_properties' | 'get_states' | 'setAction';
 export type ZimiReceiveMessageType = 'auth_app_success' | 'auth_app_failed' | 'start_session_success' | 'start_session_failed' | 'properties' | 'states' | 'state_events' | 'actions'
 
 export class ZimiEvents extends EventEmitter {
