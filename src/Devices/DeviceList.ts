@@ -87,7 +87,7 @@ export class DeviceList {
     }
 
     public displayDeviceStatus() {
-
+return;
         const actionsMessages: any[] = [];
         console.log(' device status')
 

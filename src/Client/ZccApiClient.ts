@@ -72,8 +72,8 @@ export class ZccApiClient{
 
     private receiveMessage(message: Buffer) {
         const strMessage = Buffer.from(message).toString();
-        receiveBuffLog('received data : ');
-        receiveBuffLog(strMessage);
+        // receiveBuffLog('received data : ');
+        // receiveBuffLog(strMessage);
         this.messageBuffer += strMessage;
         if (this.messageBuffer !== '' && this.messageBuffer.includes('\r\n')) {
 
