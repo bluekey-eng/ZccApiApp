@@ -3,23 +3,24 @@ import { SocketClient } from "../Socket/client";
 import { AppStorage } from "../Storage/AppStorage";
 import { log, receiveLog, receiveBuffLog } from '../log';
 import { ZccApiProcessor } from "./ZccApiProcessor";
+import { threadId } from "worker_threads";
 
 
-export interface IZccApiClientConfig{
+export interface IZccApiClientConfig {
     zccIp: string;
     zccPort: number;
     zccMac: string;
 }
-export class ZccApiClient{
+export class ZccApiClient {
     private apiProcessor: ZccApiProcessor;
     private clientSocket: SocketClient;
     private messageBuffer: string;
     private zimiEventEmitter: ZimiEvents;
     private zccApiConfig: IZccApiClientConfig;
-    constructor( config: IZccApiClientConfig ){
+    constructor(config: IZccApiClientConfig) {
 
         this.zccApiConfig = config;
-        this.clientSocket = new SocketClient( config.zccIp, config.zccPort);
+        this.clientSocket = new SocketClient(config.zccIp, config.zccPort);
         this.zimiEventEmitter = new ZimiEvents();
         this.apiProcessor = new ZccApiProcessor(this.zimiEventEmitter, config.zccMac);
         this.messageBuffer = '';
@@ -32,19 +33,16 @@ export class ZccApiClient{
             const receiveHandler = this.receiveMessage.bind(this)
             this.clientSocket.connect()
                 .then(() => {
-                    this.clientSocket.onData(receiveHandler)
+                    this.clientSocket.onData(receiveHandler);
+                    this.clientSocket.onReconnect(() => {
+                        this.initZccApiSession();
+                    })
                     resolve()
                 })
                 .catch(err => {
                     reject(err)
                 })
 
-            this.clientSocket.onClose( () =>{
-                this.stopComms()
-                this.clientSocket = null;
-
-                this.clientSocket = new SocketClient( this.zccApiConfig.zccIp, this.zccApiConfig.zccPort);
-            })
         })
     }
 
@@ -69,11 +67,11 @@ export class ZccApiClient{
                 this.zimiEventEmitter.receiveApiMessage(message, 'actions');
 
             }
-            
+
             if (responseData.controlpoint_states) {
                 this.zimiEventEmitter.receiveApiMessage(message, 'states');
             }
-            
+
             if (responseData.controlpoint_states_events) {
                 this.zimiEventEmitter.receiveApiMessage(message, 'state_events');
             }
@@ -83,7 +81,7 @@ export class ZccApiClient{
 
     private receiveEvents() {
         this.zimiEventEmitter.onSendApiMessage((message, messageType) => {
-            this.sendMessage( (message));
+            this.sendMessage((message));
             // receiveLog(`onReceiveApiMessage ${messageType} , ${JSON.stringify(message)}`)
         })
     }
@@ -116,20 +114,20 @@ export class ZccApiClient{
         }
     }
 
-    private sendMessage( message: object){
+    private sendMessage(message: object) {
         this.clientSocket.sendData(message)
     }
 
-    private stopComms(){
+    private stopComms() {
         this.clientSocket.close();
         this.clientSocket.removeAllListeners();
     }
 
-    private stopEvents(){
+    private stopEvents() {
         this.zimiEventEmitter.removeAllListeners();
     }
 
-    public getEventEmitter(): ZimiEvents{
+    public getEventEmitter(): ZimiEvents {
         return this.zimiEventEmitter
     }
 
@@ -145,11 +143,19 @@ export class ZccApiClient{
             })
     }
 
-    public requestDetails(){
+    private initZccApiSession() {
+        this.apiProcessor.initSession();
+        setTimeout(() => {
+            this.apiProcessor.requestDetails();
+
+        }, 2000)
+    }
+
+    public requestDetails() {
         this.apiProcessor.requestDetails();
     }
 
-    public stop(){
+    public stop() {
         this.stopComms();
         this.stopEvents();
     }
