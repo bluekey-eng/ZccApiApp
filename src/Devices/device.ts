@@ -41,6 +41,10 @@ export class Device{
         this.device = {id: deviceId}
     }
 
+    get(): IDevice{
+        return this.device;
+    }
+
     setProperties( props: any){
         this.device.properties = props;
     }
@@ -48,9 +52,4 @@ export class Device{
     setStates(states: any){
         this.device.states = states;
     }
-
-    get(): IDevice{
-        return this.device;
-    }
-    
 }

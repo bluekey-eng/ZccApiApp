@@ -2,10 +2,9 @@ import * as dgram from 'dgram'
 import { IFoundZccData, ZimiDiscoveryEvents } from '../Events/ZimiDiscoveryEvents';
 
 export class UdpDiscovery {
-
+  private discoveryEvents: ZimiDiscoveryEvents;
   private port: number;
   private server: dgram.Socket;
-  private discoveryEvents: ZimiDiscoveryEvents;
   constructor(port: number) {
     this.port = port;
     this.server = dgram.createSocket('udp4');
@@ -23,6 +22,10 @@ export class UdpDiscovery {
       })
 
    })
+  }
+
+  public getEvents(){
+    return this.discoveryEvents;
   }
 
   public listen() {
@@ -64,9 +67,4 @@ export class UdpDiscovery {
       })
     })
   }
-
-  public getEvents(){
-    return this.discoveryEvents;
-  }
-
 }

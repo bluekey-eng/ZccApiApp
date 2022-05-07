@@ -4,11 +4,8 @@ import { ZimiEvents } from '../Events/ZimiEvents';
 import { log } from '../log';
 
 export class WSServer {
-
-
-    private wsServer: WebSocketServer;
     private eventEmitter: ZimiEvents;
-
+    private wsServer: WebSocketServer;
     constructor(port: number, eventEmitter: ZimiEvents) {
         this.eventEmitter = eventEmitter;
 

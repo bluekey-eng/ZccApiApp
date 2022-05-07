@@ -3,17 +3,11 @@ import { UdpDiscovery } from "./UDP/discovery";
 
 export class ComponentStore {
 
-    private discovery: UdpDiscovery;
     private zccClientSet: Map<string, ZccApiClient>;
 
     constructor() {
-        this.discovery = new UdpDiscovery(5002);
-        this.discovery.listen();
-        this.zccClientSet = new Map();
-    }
 
-    public getDiscovery() {
-        return this.discovery;
+        this.zccClientSet = new Map();
     }
 
     public addZccClient(zccIp: string, zccPort: number, zccMac: string) {
@@ -34,6 +28,7 @@ export class ComponentStore {
 
     public removeZccClient(zccMac: string){
         const app = this.zccClientSet.get(zccMac);
+        app.stop();
         if( app){
             this.zccClientSet.delete(zccMac);
         }

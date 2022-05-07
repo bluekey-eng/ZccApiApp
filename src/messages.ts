@@ -9,14 +9,8 @@ export class Messages {
         // return message;
     }
 
-    public static startSessionMessage(appId: string, accessToken: string, deviceMac: string) {
-
-        const message = { request: { type: "start_session", params: { appId, deviceMac, accessToken } } }
-        return message;
-    }
-
-    public static getCPPropertiesMessage() {
-        const message = { request: { path: 'api/v1/controlpoint/properties' } }
+    public static getCPActionsMessage() {
+        const message = { request: { path: 'api/v1/controlpoint/actions', method: 'GET' } }
         return message;
     }
 
@@ -25,13 +19,8 @@ export class Messages {
         return message;
     }
 
-    public static getCPStateMessage() {
-        const message = { request: { path: 'api/v1/controlpoint/states' } }
-        return message;
-    }
-
-    public static getCPActionsMessage() {
-        const message = { request: { path: 'api/v1/controlpoint/actions', method: 'GET' } }
+    public static getCPPropertiesMessage() {
+        const message = { request: { path: 'api/v1/controlpoint/properties' } }
         return message;
     }
 
@@ -40,18 +29,8 @@ export class Messages {
         return message;
     }
 
-    public static getCPStateSubscribeMessage() {
-        const message = { request: { path: 'api/v1/subscribe/controlpoint/states' } }
-        return message;
-    }
-
     public static getCPPropertiesUnSubscribeMessage() {
         const message = { request: { path: 'api/v1/unsubscribe/controlpoint/properties' } }
-        return message;
-    }
-
-    public static getCPStateUnSubscribeMessage() {
-        const message = { request: { path: 'api/v1/unsubscribe/controlpoint/states', method: 'GET' } }
         return message;
     }
 
@@ -60,8 +39,29 @@ export class Messages {
         return message;
     }
 
+    public static getCPStateMessage() {
+        const message = { request: { path: 'api/v1/controlpoint/states' } }
+        return message;
+    }
+
+    public static getCPStateSubscribeMessage() {
+        const message = { request: { path: 'api/v1/subscribe/controlpoint/states' } }
+        return message;
+    }
+
+    public static getCPStateUnSubscribeMessage() {
+        const message = { request: { path: 'api/v1/unsubscribe/controlpoint/states', method: 'GET' } }
+        return message;
+    }
+
     public static getEchoMessage(counter: number) {
         const message = { request: { path: 'api/v1/echo', method: 'POST', body: { counter } } }
+        return message;
+    }
+
+    public static startSessionMessage(appId: string, accessToken: string, deviceMac: string) {
+
+        const message = { request: { type: "start_session", params: { appId, deviceMac, accessToken } } }
         return message;
     }
 }

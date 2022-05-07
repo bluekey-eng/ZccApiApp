@@ -23,15 +23,14 @@ export class ZimiDiscoveryEvents extends EventEmitter {
         this.emit('discover');
     }
 
+    public foundZcc(data: IFoundZccData) {
+        this.emit('found', data);
+    }
+
     public onDiscoverZcc(callback: () => void) {
         this.on('discover', () => {
             callback();
         });
-    }
-
-
-    public foundZcc(data: IFoundZccData) {
-        this.emit('found', data);
     }
 
     public onFoundZcc (callback: (params: IFoundZccData) => void)  {

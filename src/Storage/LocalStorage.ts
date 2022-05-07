@@ -7,9 +7,6 @@ import { log } from '../log';
 export class LocalStorage{
 
     private static instance: LocalStorage;
-    private constructor(){
-        storage.init();
-    }
 
     public static getInstance(){
         if(!this.instance){
@@ -18,18 +15,12 @@ export class LocalStorage{
         return this.instance;
     }
 
-    public  setItem( deviceId: string,  key: string, value: any){
-        
-        const storeKey = this.getStoreKey(deviceId,key)
-        return storage.setItem(storeKey, value)
-        .then(ret => {
-             return ret;
+    private constructor(){
+        storage.init();
+    }
 
-        })
-        .catch(err => {
-            log('LocalStorage.setItem failed ' + err.message  )
-            return (undefined);
-        })
+    private getStoreKey( deviceId: string, key: string){
+        return `${deviceId}_${key}`
 
     }
 
@@ -48,9 +39,18 @@ export class LocalStorage{
         })
     }
 
-    private getStoreKey( deviceId: string, key: string){
-        return `${deviceId}_${key}`
+    public  setItem( deviceId: string,  key: string, value: any){
+        
+        const storeKey = this.getStoreKey(deviceId,key)
+        return storage.setItem(storeKey, value)
+        .then(ret => {
+             return ret;
+
+        })
+        .catch(err => {
+            log('LocalStorage.setItem failed ' + err.message  )
+            return (undefined);
+        })
 
     }
-
 }

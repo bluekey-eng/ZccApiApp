@@ -6,9 +6,10 @@ export type ZimiSendMessageType = 'auth_app' | 'start_session' | 'get_properties
 export type ZimiReceiveMessageType = 'auth_app_success' | 'auth_app_failed' | 'start_session_success' | 'start_session_failed' | 'properties' | 'states' | 'state_events' | 'actions'
 
 export class ZimiEvents extends EventEmitter {
-
-    public sendApiMessage(message: object, messageType: ZimiSendMessageType) {
-        this.emit('sendApiMessage', { messageType, message });
+    public onReceiveApiMessage(callback: (message: object, messageType: ZimiSendMessageType) => void) {
+        this.on('receiveApiMessage', data => {
+            callback(data.message, data.messageType);
+        });
     }
 
     public onSendApiMessage(callback: (message: object, messageType: ZimiSendMessageType) => void) {
@@ -17,22 +18,10 @@ export class ZimiEvents extends EventEmitter {
         });
     }
 
-    
-
-    public receiveApiMessage(message: object, messageType: ZimiReceiveMessageType) {
-        this.emit('receiveApiMessage', { messageType, message });
-    }
-
-    public onReceiveApiMessage(callback: (message: object, messageType: ZimiSendMessageType) => void) {
-        this.on('receiveApiMessage', data => {
-            callback(data.message, data.messageType);
+    public onSetDeviceAction(callback: (device: IDevice, action: any) => void) {
+        this.on('setDeviceAction', data => {
+            callback(data.device, data.action);
         });
-    }
-
-
-
-    public updateDeviceProperties(device: IDevice) {
-        this.emit('updateDeviceProperties', { device })
     }
 
     public onUpdateDeviceProperties(callback: (device: IDevice) => void) {
@@ -41,28 +30,29 @@ export class ZimiEvents extends EventEmitter {
         });
     }
 
-
-
-    public updateDeviceStates(device: IDevice) {
-        this.emit('updateDeviceStates', { device })
-    }
-
     public onUpdateDeviceStates(callback: (device: IDevice) => void) {
         this.on('updateDeviceStates', data => {
             callback(data.device);
         });
     }
 
+    public receiveApiMessage(message: object, messageType: ZimiReceiveMessageType) {
+        this.emit('receiveApiMessage', { messageType, message });
+    }
 
+    public sendApiMessage(message: object, messageType: ZimiSendMessageType) {
+        this.emit('sendApiMessage', { messageType, message });
+    }
 
     public setDeviceAction(device: IDevice, action: any) {
         this.emit('setDeviceAction', {device, action});
     }
 
-    public onSetDeviceAction(callback: (device: IDevice, action: any) => void) {
-        this.on('setDeviceAction', data => {
-            callback(data.device, data.action);
-        });
+    public updateDeviceProperties(device: IDevice) {
+        this.emit('updateDeviceProperties', { device })
     }
 
+    public updateDeviceStates(device: IDevice) {
+        this.emit('updateDeviceStates', { device })
+    }
 }

@@ -12,6 +12,10 @@ export class SocketClient {
 		this.port = port;
 	}
 
+	public close() {
+		this.clientSocket.end();
+	}
+
 	public connect() {
 		return new Promise<void>((resolve, reject) => {
 			let socket = new net.Socket();
@@ -28,6 +32,14 @@ export class SocketClient {
 		});
 	}
 
+	public onClose(callback: any) {
+		this.clientSocket.on('close', () => {
+			// console.log('Connection closed');
+			callback();
+			return;
+		});
+	}
+
 	public onData(callback: any) {
 		this.clientSocket.on('data', (data: any) => {
 			// console.log('Received data - ' + data)
@@ -35,12 +47,14 @@ export class SocketClient {
 		})
 	}
 
-	public onClose(callback: any) {
-		this.clientSocket.on('close', () => {
-			// console.log('Connection closed');
+	public ontimeout(callback: any) {
+		this.clientSocket.on('timeout', () => {
 			callback();
-			return;
-		});
+		})
+	}
+
+	public removeAllListeners() {
+		this.clientSocket.removeAllListeners();
 	}
 
 	public removeOnData(callback: any) {
@@ -62,22 +76,7 @@ export class SocketClient {
 		);
 	}
 
-	public close() {
-		this.clientSocket.end();
-	}
-
 	public setTimeout(timeout: number) {
 		this.clientSocket.setTimeout(timeout);
 	}
-
-	public ontimeout(callback: any) {
-		this.clientSocket.on('timeout', () => {
-			callback();
-		})
-	}
-
-	public removeAllListeners() {
-		this.clientSocket.removeAllListeners();
-	}
-
 }

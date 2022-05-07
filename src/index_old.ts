@@ -1,9 +1,9 @@
 import { ZccApiClient } from "./Client/ZccApiClient";
-import { MessageHandler } from "./MessageHandler"
-import { MessageHandlerEchoTest } from "./MessageHandlerEchoTest"
+// import { MessageHandler } from "./MessageHandler"
+// import { MessageHandlerEchoTest } from "./MessageHandlerEchoTest"
 
 import { UdpDiscovery } from "./UDP/discovery";
-import { WSServer } from "./WS/server";
+// import { WSServer } from "./WS/server";
 
 // const zccIp = '192.168.0.95';
 // const zccIp = '172.20.10.11'
@@ -29,7 +29,7 @@ const run = async () => {
     const msgHandler = new ZccApiClient({zccIp, zccPort, zccMac});
     msgHandler.run();
 
-    const wsServer = new WSServer( 8080, msgHandler.getEventEmitter());
+    // const wsServer = new WSServer( 8080, msgHandler.getEventEmitter());
 
 
     process.on('uncaughtException', function (err) {

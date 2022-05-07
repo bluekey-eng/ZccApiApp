@@ -32,13 +32,11 @@ enum States {
 
 }
 export class MessageHandler {
-
+    private appStorage: AppStorage;
     private clientSocket: SocketClient;
-    private state: States;
     private deviceList: DeviceList;
     private messageBuffer: string;
-    private appStorage: AppStorage;
-
+    private state: States;
     private zimiEventEmitter: ZimiEvents;
     constructor(zccIp: string, zccPort: number, zccMac: string) {
         this.clientSocket = new SocketClient(zccIp, zccPort)
@@ -73,131 +71,6 @@ export class MessageHandler {
         })
     }
 
-    private receiveMessage(message: Buffer) {
-        const strMessage = Buffer.from(message).toString();
-        receiveBuffLog('received data : ');
-        receiveBuffLog(strMessage);
-        this.messageBuffer += strMessage;
-        if (this.messageBuffer !== '' && this.messageBuffer.includes('\r\n')) {
-
-            const splitMessages = this.messageBuffer.split('\r\n');
-            this.messageBuffer = this.messageBuffer.slice(this.messageBuffer.lastIndexOf('\r\n'))
-            splitMessages.forEach(splitMessage => {
-                if (splitMessage.trim() !== '') {
-
-                    try {
-                        const jsonMessage = JSON.parse(splitMessage);
-
-                        receiveLog('received message: ')
-                        receiveLog(splitMessage);
-                        this.messageReceiveHandler(jsonMessage)
-                        
-                    } catch (err) {
-                        receiveLog('received message non json: ' + err)
-                        receiveLog(splitMessage);
-                    }
-                }
-            })
-        }
-    }
-
-    private messageSendHandler() {
-        switch (this.state) {
-            case States.PRE_AUTHAPP:
-                this.appStorage.getItem('deviceMac')
-                    .then(deviceMac => {
-                        if (deviceMac === undefined) {
-                            deviceMac = '00000000000A';
-                        }
-
-                        this.appStorage.getItem('accessToken')
-                        .then( accessToken => {
-
-                            if( !accessToken){
-
-                                this.clientSocket.sendData(Messages.getAuthAppMessage(appId, appToken, deviceMac))
-                                this.state = States.POST_AUTHAPP;
-                            }else{
-                                this.clientSocket.sendData(Messages.startSessionMessage(appId, accessToken, deviceMac))
-                                this.state = States.POST_STARTSESSION;
-                            }
-                        })
-                        .catch(err => {
-                            log( 'appStorage.getItem error ' + err.message)
-                        })
-
-                    })
-                break;
-
-            case States.PRE_STARTSESSION:
-                // this.clientSocket.sendData(Messages.startSessionMessage())
-                // this.state = States.POST_STARTSESSION;
-                break;
-            case States.PRE:
-                // this.clientSocket.sendData(Messages.getCPPropertiesMessage())
-                // this.state = States.REQUESTED_PROPERTIES;
-                break;
-            case States.RECEIVE_PROPERTIES:
-                // this.clientSocket.sendData(Messages.getCPActionsMessage());
-                // this.state = States.REQUEST_ACTIONS;
-
-                // this.clientSocket.sendData(Messages.getCPStateMessage());
-                // this.state = States.REQUESTED_STATES;
-
-                break;
-            case States.RECEIVE_ACTIONS:
-                this.clientSocket.sendData(Messages.getCPStateMessage());
-                this.state = States.REQUESTED_STATES;
-                break;
-            case States.RECEIVE_STATES:
-                // this.clientSocket.sendData(Messages.getCPStateSubscribeMessage());
-                // this.state = States.REQUESTED_STATE_EVENTS;
-                break;
-            case States.RECEIVE_STATE_EVENTS:
-                // this.setTimeout(10000).then(() => {
-                if (this.state === States.RECEIVE_STATE_EVENTS) {
-
-                    // setInterval(() => {
-
-                    //     this.deviceList.displayDeviceStatus();
-
-                    //     // const actions = this.deviceList.toggleOnOffMessages();
-                    //     // this.clientSocket.sendData(Messages.getCPSetActions(actions));
-
-
-
-                    //     // actions.forEach(action =>{
-                    //     //     this.clientSocket.sendData(Messages.getCPSetActions([action]));
-                    //     // })
-
-
-                    //     const actions = this.deviceList.toggleOnOffAllMessages(true);
-                    //     this.clientSocket.sendData(Messages.getCPSetActions(actions));
-                    //     setTimeout(() => {
-                    //         const actions = this.deviceList.toggleOnOffAllMessages(false);
-                    //         this.clientSocket.sendData(Messages.getCPSetActions(actions));
-                    //     }, 30000)
-
-                    // }, 10000)
-                }
-                this.state = States.RECEIVED_STATE_EVETS;
-
-                // })
-                break;
-            case States.SENT_TOGGLE_ACTION:
-
-                break;
-
-        }
-    }
-
-    private setTimeout(timeout: number) {
-        return new Promise<void>((resolve, reject) => {
-            setTimeout(() => {
-                resolve()
-            }, timeout)
-        })
-    }
     private messageReceiveHandler(message: any) {
 
         if (message) {
@@ -302,9 +175,135 @@ export class MessageHandler {
         }
     }
 
+    private messageSendHandler() {
+        switch (this.state) {
+            case States.PRE_AUTHAPP:
+                this.appStorage.getItem('deviceMac')
+                    .then(deviceMac => {
+                        if (deviceMac === undefined) {
+                            deviceMac = '00000000000A';
+                        }
+
+                        this.appStorage.getItem('accessToken')
+                        .then( accessToken => {
+
+                            if( !accessToken){
+
+                                this.clientSocket.sendData(Messages.getAuthAppMessage(appId, appToken, deviceMac))
+                                this.state = States.POST_AUTHAPP;
+                            }else{
+                                this.clientSocket.sendData(Messages.startSessionMessage(appId, accessToken, deviceMac))
+                                this.state = States.POST_STARTSESSION;
+                            }
+                        })
+                        .catch(err => {
+                            log( 'appStorage.getItem error ' + err.message)
+                        })
+
+                    })
+                break;
+
+            case States.PRE_STARTSESSION:
+                // this.clientSocket.sendData(Messages.startSessionMessage())
+                // this.state = States.POST_STARTSESSION;
+                break;
+            case States.PRE:
+                // this.clientSocket.sendData(Messages.getCPPropertiesMessage())
+                // this.state = States.REQUESTED_PROPERTIES;
+                break;
+            case States.RECEIVE_PROPERTIES:
+                // this.clientSocket.sendData(Messages.getCPActionsMessage());
+                // this.state = States.REQUEST_ACTIONS;
+
+                // this.clientSocket.sendData(Messages.getCPStateMessage());
+                // this.state = States.REQUESTED_STATES;
+
+                break;
+            case States.RECEIVE_ACTIONS:
+                this.clientSocket.sendData(Messages.getCPStateMessage());
+                this.state = States.REQUESTED_STATES;
+                break;
+            case States.RECEIVE_STATES:
+                // this.clientSocket.sendData(Messages.getCPStateSubscribeMessage());
+                // this.state = States.REQUESTED_STATE_EVENTS;
+                break;
+            case States.RECEIVE_STATE_EVENTS:
+                // this.setTimeout(10000).then(() => {
+                if (this.state === States.RECEIVE_STATE_EVENTS) {
+
+                    // setInterval(() => {
+
+                    //     this.deviceList.displayDeviceStatus();
+
+                    //     // const actions = this.deviceList.toggleOnOffMessages();
+                    //     // this.clientSocket.sendData(Messages.getCPSetActions(actions));
+
+
+
+                    //     // actions.forEach(action =>{
+                    //     //     this.clientSocket.sendData(Messages.getCPSetActions([action]));
+                    //     // })
+
+
+                    //     const actions = this.deviceList.toggleOnOffAllMessages(true);
+                    //     this.clientSocket.sendData(Messages.getCPSetActions(actions));
+                    //     setTimeout(() => {
+                    //         const actions = this.deviceList.toggleOnOffAllMessages(false);
+                    //         this.clientSocket.sendData(Messages.getCPSetActions(actions));
+                    //     }, 30000)
+
+                    // }, 10000)
+                }
+                this.state = States.RECEIVED_STATE_EVETS;
+
+                // })
+                break;
+            case States.SENT_TOGGLE_ACTION:
+
+                break;
+
+        }
+    }
+
     private receiveEvents() {
         this.zimiEventEmitter.onReceiveApiMessage((message, messageType) => {
             // receiveLog(`onReceiveApiMessage ${messageType} , ${JSON.stringify(message)}`)
+        })
+    }
+
+    private receiveMessage(message: Buffer) {
+        const strMessage = Buffer.from(message).toString();
+        receiveBuffLog('received data : ');
+        receiveBuffLog(strMessage);
+        this.messageBuffer += strMessage;
+        if (this.messageBuffer !== '' && this.messageBuffer.includes('\r\n')) {
+
+            const splitMessages = this.messageBuffer.split('\r\n');
+            this.messageBuffer = this.messageBuffer.slice(this.messageBuffer.lastIndexOf('\r\n'))
+            splitMessages.forEach(splitMessage => {
+                if (splitMessage.trim() !== '') {
+
+                    try {
+                        const jsonMessage = JSON.parse(splitMessage);
+
+                        receiveLog('received message: ')
+                        receiveLog(splitMessage);
+                        this.messageReceiveHandler(jsonMessage)
+                        
+                    } catch (err) {
+                        receiveLog('received message non json: ' + err)
+                        receiveLog(splitMessage);
+                    }
+                }
+            })
+        }
+    }
+
+    private setTimeout(timeout: number) {
+        return new Promise<void>((resolve, reject) => {
+            setTimeout(() => {
+                resolve()
+            }, timeout)
         })
     }
 

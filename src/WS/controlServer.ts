@@ -1,17 +1,20 @@
 
 import { WebSocketServer } from 'ws'
 import { ComponentStore } from '../ComponentStore';
-import { ZimiEvents } from '../Events/ZimiEvents';
+// import { ZimiEvents } from '../Events/ZimiEvents';
 import { log } from '../log';
+import { UdpDiscovery } from '../UDP/discovery';
 
 export class WSControlServer {
-
-
-    private wsServer: WebSocketServer;
     private componentStore: ComponentStore;
+    private wsServer: WebSocketServer;
+    private discovery: UdpDiscovery;
 
-    constructor(port: number, componentStore: ComponentStore) {
-        this.componentStore = componentStore;
+    constructor(port: number) {
+        this.componentStore = new ComponentStore();
+
+        this.discovery = new UdpDiscovery(5002);
+        this.discovery.listen();
 
         this.wsServer = new WebSocketServer({ port })
 
@@ -31,44 +34,47 @@ export class WSControlServer {
 
 
                 if (requestObj.request.type === 'discover') {
-                    this.componentStore.getDiscovery().getEvents().discoverZcc();
+                    this.getDiscovery().getEvents().discoverZcc();
                 }
                 if (requestObj.request.type === 'connectzcc') {
                     const clientParams = requestObj.request.params;
 
                     const clientCheck = this.componentStore.getZccClient(clientParams.mac);
+                    let client;
                     if (!clientCheck) {
 
                         this.componentStore.addZccClient(clientParams.host, clientParams.port, clientParams.mac)
-
-                        const client = this.componentStore.getZccClient(clientParams.mac);
+                        client = this.componentStore.getZccClient(clientParams.mac);
                         client.run();
-
-                        const eventEmitter = client.getEventEmitter();
-
-                        eventEmitter.onReceiveApiMessage((message: any, messageType) => {
-                            const newMessagee =
-                            {
-                                type: 'receivedmessage',
-                                data: message,
-                                mac: clientParams.mac
-                            };
-
-                            ws.send(JSON.stringify(newMessagee));
-                        })
-
-
-                        eventEmitter.onSendApiMessage((message: any, messageType) => {
-                            const newMessagee =
-                            {
-                                type: 'sentmessage',
-                                data: message,
-                                mac: clientParams.mac
-                            }; ws.send(JSON.stringify(newMessagee));
-                        })
                     } else {
-                        ws.send(JSON.stringify({ error: 'zcc already connected' }))
+                        // ws.send(JSON.stringify({ error: 'zcc already connected' }))
+
+                        client = this.componentStore.getZccClient(clientParams.mac);
+                        client.requestDetails();
                     }
+                    const eventEmitter = client.getEventEmitter();
+
+                    eventEmitter.onReceiveApiMessage((message: any, messageType) => {
+                        const newMessagee =
+                        {
+                            type: 'receivedmessage',
+                            data: message,
+                            mac: clientParams.mac
+                        };
+
+                        ws.send(JSON.stringify(newMessagee));
+                    })
+
+
+                    eventEmitter.onSendApiMessage((message: any, messageType) => {
+                        const newMessagee =
+                        {
+                            type: 'sentmessage',
+                            data: message,
+                            mac: clientParams.mac
+                        }; ws.send(JSON.stringify(newMessagee));
+                    })
+
                 }
                 if (requestObj.request.type === 'disconnectzcc') {
                     const clientParams = requestObj.request.params;
@@ -76,10 +82,10 @@ export class WSControlServer {
                     const clientCheck = this.componentStore.getZccClient(clientParams.mac);
                     if (clientCheck) {
 
-                        const client = this.componentStore.getZccClient(clientParams.mac);
-                        client.stop();
+                        // const client = this.componentStore.getZccClient(clientParams.mac);
+                        // client.stop();
 
-                        this.componentStore.removeZccClient(clientParams.mac)
+                        // this.componentStore.removeZccClient(clientParams.mac)
                     } else {
                         ws.send(JSON.stringify({ error: 'zcc not found' }))
                     }
@@ -94,7 +100,7 @@ export class WSControlServer {
                 }
             })
 
-            this.componentStore.getDiscovery().getEvents().onFoundZcc(data => {
+            this.getDiscovery().getEvents().onFoundZcc(data => {
                 ws.send(JSON.stringify({ type: 'foundzcc', data }));
             })
 
@@ -103,6 +109,10 @@ export class WSControlServer {
     }
 
     public run() {
+    }
+
+    private getDiscovery() {
+        return this.discovery;
     }
 }
 

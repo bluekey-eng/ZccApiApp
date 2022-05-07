@@ -11,38 +11,18 @@ export interface IZccApiClientConfig{
     zccMac: string;
 }
 export class ZccApiClient{
+    private apiProcessor: ZccApiProcessor;
     private clientSocket: SocketClient;
     private messageBuffer: string;
     private zimiEventEmitter: ZimiEvents;
-    private apiProcessor: ZccApiProcessor;
-
+    private zccApiConfig: IZccApiClientConfig;
     constructor( config: IZccApiClientConfig ){
+
+        this.zccApiConfig = config;
         this.clientSocket = new SocketClient( config.zccIp, config.zccPort);
         this.zimiEventEmitter = new ZimiEvents();
         this.apiProcessor = new ZccApiProcessor(this.zimiEventEmitter, config.zccMac);
         this.messageBuffer = '';
-    }
-
-
-    public run() {
-        this.initComms()
-            .then(() => {
-                this.receiveEvents();
-                // this.messageSendHandler();
-                this.apiProcessor.run();
-            })
-            .catch(err => {
-                log('connection failed ' + err.message)
-            })
-    }
-
-    public stop(){
-        this.stopComms();
-        this.stopEvents();
-    }
-
-    public getEventEmitter(): ZimiEvents{
-        return this.zimiEventEmitter
     }
 
     private initComms() {
@@ -58,44 +38,14 @@ export class ZccApiClient{
                 .catch(err => {
                     reject(err)
                 })
-        })
-    }
 
-    private stopComms(){
-        this.clientSocket.close();
-        this.clientSocket.removeAllListeners();
-    }
+            this.clientSocket.onClose( () =>{
+                this.stopComms()
+                this.clientSocket = null;
 
-    private stopEvents(){
-        this.zimiEventEmitter.removeAllListeners();
-    }
-
-    private receiveMessage(message: Buffer) {
-        const strMessage = Buffer.from(message).toString();
-        // receiveBuffLog('received data : ');
-        // receiveBuffLog(strMessage);
-        this.messageBuffer += strMessage;
-        if (this.messageBuffer !== '' && this.messageBuffer.includes('\r\n')) {
-
-            const splitMessages = this.messageBuffer.split('\r\n');
-            this.messageBuffer = this.messageBuffer.slice(this.messageBuffer.lastIndexOf('\r\n'))
-            splitMessages.forEach(splitMessage => {
-                if (splitMessage.trim() !== '') {
-
-                    try {
-                        const jsonMessage = JSON.parse(splitMessage);
-
-                        receiveLog('received message: ')
-                        receiveLog(splitMessage);
-
-                        this.messageReceiveHandler(jsonMessage)
-                    } catch (err) {
-                        receiveLog('received message non json: ' + err)
-                        receiveLog(splitMessage);
-                    }
-                }
+                this.clientSocket = new SocketClient( this.zccApiConfig.zccIp, this.zccApiConfig.zccPort);
             })
-        }
+        })
     }
 
     private messageReceiveHandler(message: any) {
@@ -131,10 +81,6 @@ export class ZccApiClient{
         }
     }
 
-    private sendMessage( message: object){
-        this.clientSocket.sendData(message)
-    }
-
     private receiveEvents() {
         this.zimiEventEmitter.onSendApiMessage((message, messageType) => {
             this.sendMessage( (message));
@@ -142,4 +88,69 @@ export class ZccApiClient{
         })
     }
 
+    private receiveMessage(message: Buffer) {
+        const strMessage = Buffer.from(message).toString();
+        // receiveBuffLog('received data : ');
+        // receiveBuffLog(strMessage);
+        this.messageBuffer += strMessage;
+        if (this.messageBuffer !== '' && this.messageBuffer.includes('\r\n')) {
+
+            const splitMessages = this.messageBuffer.split('\r\n');
+            this.messageBuffer = this.messageBuffer.slice(this.messageBuffer.lastIndexOf('\r\n'))
+            splitMessages.forEach(splitMessage => {
+                if (splitMessage.trim() !== '') {
+
+                    try {
+                        const jsonMessage = JSON.parse(splitMessage);
+
+                        receiveLog('received message: ')
+                        receiveLog(splitMessage);
+
+                        this.messageReceiveHandler(jsonMessage)
+                    } catch (err) {
+                        receiveLog('received message non json: ' + err)
+                        receiveLog(splitMessage);
+                    }
+                }
+            })
+        }
+    }
+
+    private sendMessage( message: object){
+        this.clientSocket.sendData(message)
+    }
+
+    private stopComms(){
+        this.clientSocket.close();
+        this.clientSocket.removeAllListeners();
+    }
+
+    private stopEvents(){
+        this.zimiEventEmitter.removeAllListeners();
+    }
+
+    public getEventEmitter(): ZimiEvents{
+        return this.zimiEventEmitter
+    }
+
+    public run() {
+        this.initComms()
+            .then(() => {
+                this.receiveEvents();
+                // this.messageSendHandler();
+                this.apiProcessor.run();
+            })
+            .catch(err => {
+                log('connection failed ' + err.message)
+            })
+    }
+
+    public requestDetails(){
+        this.apiProcessor.requestDetails();
+    }
+
+    public stop(){
+        this.stopComms();
+        this.stopEvents();
+    }
 }

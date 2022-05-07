@@ -1,15 +1,14 @@
-import { ZccApiClient } from "./Client/ZccApiClient";
+// import { ZccApiClient } from "./Client/ZccApiClient";
 import { ComponentStore } from "./ComponentStore";
 
-import { UdpDiscovery } from "./UDP/discovery";
+// import { UdpDiscovery } from "./UDP/discovery";
 import { WSControlServer } from "./WS/controlServer";
-import { WSServer } from "./WS/server";
+// import { WSServer } from "./WS/server";
 
 
 const run = async () => {
 
-    const componentStore = new ComponentStore();
-    const ws = new WSControlServer(8080, componentStore);
+    const ws = new WSControlServer(8080);
 
 
     process.on('uncaughtException', function (err) {
