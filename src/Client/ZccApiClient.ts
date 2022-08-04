@@ -15,8 +15,8 @@ export class ZccApiClient {
     private apiProcessor: ZccApiProcessor;
     private clientSocket: SocketClient;
     private messageBuffer: string;
-    private zimiEventEmitter: ZimiEvents;
     private zccApiConfig: IZccApiClientConfig;
+    private zimiEventEmitter: ZimiEvents;
     constructor(config: IZccApiClientConfig) {
 
         this.zccApiConfig = config;
@@ -44,6 +44,14 @@ export class ZccApiClient {
                 })
 
         })
+    }
+
+    private initZccApiSession() {
+        this.apiProcessor.initSession();
+        setTimeout(() => {
+            this.apiProcessor.requestDetails();
+
+        }, 2000)
     }
 
     private messageReceiveHandler(message: any) {
@@ -131,6 +139,10 @@ export class ZccApiClient {
         return this.zimiEventEmitter
     }
 
+    public requestDetails() {
+        this.apiProcessor.requestDetails();
+    }
+
     public run() {
         this.initComms()
             .then(() => {
@@ -141,18 +153,6 @@ export class ZccApiClient {
             .catch(err => {
                 log('connection failed ' + err.message)
             })
-    }
-
-    private initZccApiSession() {
-        this.apiProcessor.initSession();
-        setTimeout(() => {
-            this.apiProcessor.requestDetails();
-
-        }, 2000)
-    }
-
-    public requestDetails() {
-        this.apiProcessor.requestDetails();
     }
 
     public stop() {

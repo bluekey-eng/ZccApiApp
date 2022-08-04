@@ -2,31 +2,18 @@ import * as net from 'net';
 import { offLog, sendLog } from '../log';
 
 export class SocketClient {
-
+	private aliveHandler: any;
 	private clientSocket: net.Socket;
 	private ip: string;
-	private port: number;
-
-	private aliveHandler: any;
 	private onDataCallback: (data: any) => {};
 	private onReconnectCallback: () => {};
+	private port: number;
 	private status :  'init' | 'connected' | 'error' | 'reconnecting' | 'disconnected'
 
 	constructor(ip: string, port: number) {
 		this.ip = ip;
 		this.port = port;
 		this.status = 'init';
-	}
-
-	public close() {
-		this.clientSocket.end();
-	}
-
-	public connect() {
-		return this.connectInternal()
-			.then(ret => {
-			})
-
 	}
 
 	private connectInternal() {
@@ -67,6 +54,10 @@ export class SocketClient {
 		})
 	}
 
+	private reConnected(){
+		this.onReconnectCallback();
+	}
+
 	private runAliveHandler(){
 		if( this.status === 'connected'){
 
@@ -95,6 +86,17 @@ export class SocketClient {
 		
 	}
 
+	public close() {
+		this.clientSocket.end();
+	}
+
+	public connect() {
+		return this.connectInternal()
+			.then(ret => {
+			})
+
+	}
+
 	public onData(callback: any) {
 		if (this.onDataCallback) {
 			this.clientSocket.removeListener('data', this.onDataCallback);
@@ -108,10 +110,6 @@ export class SocketClient {
 
 	public onReconnect( callback: any){
 		this.onReconnectCallback = callback;
-	}
-
-	private reConnected(){
-		this.onReconnectCallback();
 	}
 
 	// public ontimeout(callback: any) {

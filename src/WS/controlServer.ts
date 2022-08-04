@@ -7,9 +7,8 @@ import { UdpDiscovery } from '../UDP/discovery';
 
 export class WSControlServer {
     private componentStore: ComponentStore;
-    private wsServer: WebSocketServer;
     private discovery: UdpDiscovery;
-
+    private wsServer: WebSocketServer;
     constructor(port: number) {
         this.componentStore = new ComponentStore();
 
@@ -108,11 +107,11 @@ export class WSControlServer {
         })
     }
 
-    public run() {
-    }
-
     private getDiscovery() {
         return this.discovery;
+    }
+
+    public run() {
     }
 }
 
