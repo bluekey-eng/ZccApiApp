@@ -52,6 +52,14 @@ export class SocketClient {
 				clearInterval(this.aliveHandler);
 			}
 		})
+
+		this.clientSocket.on('close', () =>{
+			this.stopAliveHandler()
+		})
+
+		this.clientSocket.on('end' , () =>{
+			this.stopAliveHandler()
+		})
 	}
 
 	private reConnected(){
@@ -64,6 +72,12 @@ export class SocketClient {
 			 this.aliveHandler = setInterval( () =>{
 				this.sendData({})
 			}, 30000)
+		}
+	}
+
+	private stopAliveHandler(){
+		if(this.aliveHandler){
+			clearInterval(this.aliveHandler)
 		}
 	}
 
@@ -87,6 +101,7 @@ export class SocketClient {
 	}
 
 	public close() {
+		this.stopAliveHandler();
 		this.clientSocket.end();
 	}
 
@@ -128,7 +143,7 @@ export class SocketClient {
 
 	public sendData(message: object) {
 		const stringMessage = JSON.stringify(message);
-		sendLog('sending - ' + stringMessage)
+		// sendLog('sending - ' + stringMessage)
 		this.clientSocket.write(stringMessage + '\r\n'
 			// ,
 			// (err) => {
