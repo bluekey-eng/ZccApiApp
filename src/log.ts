@@ -11,4 +11,6 @@ const receiveLog = (message: string) => log(chalk.blue(message));
 const onLog = (message: string) => log(chalk.green(message));
 const offLog = (message: string) => log(chalk.red(message));
 
-export { log, sendLog, receiveLog, onLog, offLog, receiveBuffLog };
+const successLog = ( message: string) => log( chalk.hex('#70C060')(message) );
+
+export { log, sendLog, receiveLog, onLog, offLog, receiveBuffLog, successLog };
