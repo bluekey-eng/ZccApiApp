@@ -15,11 +15,11 @@ export class ZccApiClient {
     private apiProcessor: ZccApiProcessor;
     private clientSocket: SocketClient;
     private messageBuffer: string;
-    private zccApiConfig: IZccApiClientConfig;
+    // private zccApiConfig: IZccApiClientConfig;
     private zimiEventEmitter: ZimiEvents;
     constructor(config: IZccApiClientConfig) {
 
-        this.zccApiConfig = config;
+        // this.zccApiConfig = config;
         this.clientSocket = new SocketClient(config.zccIp, config.zccPort);
         this.zimiEventEmitter = new ZimiEvents();
         this.apiProcessor = new ZccApiProcessor(this.zimiEventEmitter, config.zccMac);
@@ -28,7 +28,6 @@ export class ZccApiClient {
 
     private initComms() {
         return new Promise<void>((resolve, reject) => {
-
 
             const receiveHandler = this.receiveMessage.bind(this)
             this.clientSocket.connect()
@@ -42,7 +41,6 @@ export class ZccApiClient {
                 .catch(err => {
                     reject(err)
                 })
-
         })
     }
 
@@ -50,7 +48,6 @@ export class ZccApiClient {
         this.apiProcessor.initSession();
         setTimeout(() => {
             this.apiProcessor.requestDetails();
-
         }, 2000)
     }
 
@@ -73,7 +70,6 @@ export class ZccApiClient {
 
             if (responseData.controlpoint_actions) {
                 this.zimiEventEmitter.receiveApiMessage(message, 'actions');
-
             }
 
             if (responseData.controlpoint_states) {
@@ -109,8 +105,8 @@ export class ZccApiClient {
                     try {
                         const jsonMessage = JSON.parse(splitMessage);
 
-                        receiveLog('received message: ')
-                        receiveLog(splitMessage);
+                        // receiveLog('received message: ')
+                        // receiveLog(splitMessage);
 
                         this.messageReceiveHandler(jsonMessage)
                     } catch (err) {
@@ -128,6 +124,7 @@ export class ZccApiClient {
 
     private stopComms() {
         this.clientSocket.close();
+        this.apiProcessor.stop();
         this.clientSocket.removeAllListeners();
     }
 
@@ -143,12 +140,34 @@ export class ZccApiClient {
         this.apiProcessor.requestDetails();
     }
 
+    public requestProperties(){
+        this.apiProcessor.requestProperties();
+    }
+
+    public requestState(){
+        this.apiProcessor.requestState();
+    }
+
+
     public run() {
-        this.initComms()
+        return this.initComms()
             .then(() => {
                 this.receiveEvents();
                 // this.messageSendHandler();
                 this.apiProcessor.run();
+                return;
+            })
+            .catch(err => {
+                log('connection failed ' + err.message)
+            })
+    }
+
+    public runInitSession() {
+        return this.initComms()
+            .then(() => {
+                this.receiveEvents();
+                this.apiProcessor.runInitSession();
+                return;
             })
             .catch(err => {
                 log('connection failed ' + err.message)
