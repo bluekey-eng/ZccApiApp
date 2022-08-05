@@ -39,11 +39,7 @@ export class ZccApiProcessor {
             actionsRequested: false,
             sendActionsStarted: false
         }
-
-
         // this.messageReceiveHandler.bind(this);
-
-
     }
 
     public requestDetails() {
@@ -51,6 +47,15 @@ export class ZccApiProcessor {
         this.sendMessage(Messages.getCPPropertiesCountMessage())
         this.sendMessage(Messages.getCPStateMessage())
     }
+
+    public requestProperties(){
+        this.sendMessage(Messages.getCPPropertiesMessage());
+    }
+
+    public requestState(){
+        this.sendMessage(Messages.getCPStateMessage());
+    }
+
 
     public async initSession() {
         const accessToken = await this.appStorage.getItem('accessToken')
@@ -163,28 +168,33 @@ export class ZccApiProcessor {
 
     public run() {
         this.processReceivedEvents();
+        this.runInitSession();
+    }
 
+    public runInitSession(){
         this.appStorage.getItem('deviceMac')
-            .then(deviceMac => {
-                if (deviceMac === undefined) {
-                    deviceMac = '00000000000A';
-                }
+        .then(deviceMac => {
+            if (deviceMac === undefined) {
+                deviceMac = '00000000000A';
+            }
 
-                this.appStorage.getItem('accessToken')
-                    .then(accessToken => {
+            this.appStorage.getItem('accessToken')
+                .then(accessToken => {
 
-                        if (!accessToken) {
+                    if (!accessToken) {
 
-                            this.sendMessage(Messages.getAuthAppMessage(appId, appToken, deviceMac))
-                        } else {
-                            this.sendMessage(Messages.startSessionMessage(appId, accessToken, deviceMac))
-                        }
-                    })
-                    .catch(err => {
-                        log('appStorage.getItem error ' + err.message)
-                    })
+                        this.sendMessage(Messages.getAuthAppMessage(appId, appToken, deviceMac))
+                    } else {
+                        this.sendMessage(Messages.startSessionMessage(appId, accessToken, deviceMac))
+                    }
+                })
+                .catch(err => {
+                    log('appStorage.getItem error ' + err.message)
+                })
+        })
+    }
 
-            })
-
+    public stop(){
+        this.zimiEventEmitter.removeAllListeners();
     }
 }
