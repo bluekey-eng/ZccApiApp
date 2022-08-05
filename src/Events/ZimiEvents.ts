@@ -6,7 +6,7 @@ export type ZimiSendMessageType = 'auth_app' | 'start_session' | 'get_properties
 export type ZimiReceiveMessageType = 'auth_app_success' | 'auth_app_failed' | 'start_session_success' | 'start_session_failed' | 'properties' | 'states' | 'state_events' | 'actions'
 
 export class ZimiEvents extends EventEmitter {
-    public onReceiveApiMessage(callback: (message: object, messageType: ZimiSendMessageType) => void) {
+    public onReceiveApiMessage(callback: (message: object, messageType: ZimiReceiveMessageType) => void) {
         this.on('receiveApiMessage', data => {
             callback(data.message, data.messageType);
         });
