@@ -11,20 +11,22 @@ export class UdpDiscovery {
     this.discoveryEvents = new ZimiDiscoveryEvents();
 
 
-    this.discoveryEvents.onDiscoverZcc( () => {
+    this.discoveryEvents.onDiscoverZcc(() => {
       const broadcastPort = 5001
       const broadcastHost = '255.255.255.255';
 
       const bcServer = dgram.createSocket('udp4');
-      bcServer.bind( () => {
+      bcServer.bind(() => {
         bcServer.setBroadcast(true);
-        bcServer.send( 'ZIMI', broadcastPort, broadcastHost)
+        bcServer.send('ZIMI', broadcastPort, broadcastHost, (err, bytes) =>{
+            bcServer.close();
+        })        
       })
 
-   })
+    })
   }
 
-  public getEvents(){
+  public getEvents() {
     return this.discoveryEvents;
   }
 
@@ -35,10 +37,11 @@ export class UdpDiscovery {
         this.server.on('error', (err) => {
           console.log(`server error:\n${err.stack}`);
           this.server.close();
+          reject(err)
         });
 
         this.server.on('message', (msg, rinfo) => {
-          console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+          // console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
 
           const foundObj = JSON.parse(msg.toString())
           const foundData: IFoundZccData = {
@@ -55,7 +58,7 @@ export class UdpDiscovery {
             networkName: foundObj.networkName,
             uptime: foundObj.uptime
           }
-          this.discoveryEvents.foundZcc( foundData )
+          this.discoveryEvents.foundZcc(foundData)
 
           // setTimeout(() => { this.server.close(), this, this.server.disconnect() }, 5000)
         });
@@ -64,7 +67,17 @@ export class UdpDiscovery {
           var address = this.server.address();
           console.log(`server listening ${address.address}:${address.port}`);
         });
+
+        this.server.on('close', () => {
+          console.log('closing bind')
+          resolve();
+        })
       })
     })
+  }
+
+  public stopListening() {
+    this.server.close();
+
   }
 }
